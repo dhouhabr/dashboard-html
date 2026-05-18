@@ -1,0 +1,4496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Cockpit Dashboard — Portfolio TDF</title>
+<script>__CHART_PLACEHOLDER__</script>
+<script>__XLSX_PLACEHOLDER__</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* === TotalEnergies Digital Factory palette === */
+  :root {
+    --te-blue-deep: #1B2D8C;
+    --te-blue: #0072CE;
+    --te-blue-bright: #0099FF;
+    --te-blue-light: #E8F4FF;
+    --te-cyan: #00BFD6;
+    --te-cyan-light: #B7ECF3;
+    --te-teal: #00B894;
+    --te-teal-light: #C8F1E6;
+    --te-green-mint: #4FCBA4;
+    --te-purple: #3D52E0;
+    --te-yellow: #FFC72C;
+    --te-orange: #FF8C00;
+    --te-red: #E63946;
+    --te-red-light: #FBD5D8;
+
+    --bg: #F2F5FA;
+    --card: #FFFFFF;
+    --text: #1A1A1A;
+    --text-muted: #6B7280;
+    --text-subtle: #9CA3AF;
+    --border: #E5E7EB;
+    --shadow: 0 1px 3px rgba(20,40,90,0.06), 0 1px 2px rgba(20,40,90,0.04);
+    --shadow-lg: 0 6px 18px rgba(20,40,90,0.08);
+    --shadow-blue: 0 8px 24px rgba(0,114,206,0.25);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === Header === */
+  .header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-img {
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--te-blue-deep);
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: var(--te-blue);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* === Smart Search === */
+  .header { justify-content: space-between; }
+  .searchbar-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 480px;
+    margin-left: 30px;
+  }
+  .searchbar {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1px solid var(--border);
+    background: #F8FAFC;
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.15s;
+  }
+  .searchbar::placeholder { color: var(--text-muted); }
+  .searchbar:focus {
+    outline: none;
+    border-color: var(--te-blue);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,114,206,0.10);
+  }
+  .searchbar-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    font-size: 14px;
+  }
+  .search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    max-height: 480px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    display: none;
+  }
+  .search-dropdown.open { display: block; }
+  .search-section { padding: 8px; border-bottom: 1px solid var(--border); }
+  .search-section:last-child { border-bottom: none; }
+  .search-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 4px 10px 8px;
+  }
+  .search-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: background 0.1s;
+  }
+  .search-result:hover, .search-result.active { background: #F0F7FF; }
+  .search-result-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: #EFF6FF;
+    color: var(--te-blue);
+  }
+  .search-result-text { flex: 1; min-width: 0; }
+  .search-result-title { font-weight: 600; }
+  .search-result-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .search-answer-card {
+    margin: 12px 0 4px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border: 1px solid #BFDBFE;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .search-answer-card.dismiss {
+    background: linear-gradient(135deg, #FFF7ED 0%, #FED7AA 100%);
+    border-color: #FDBA74;
+  }
+  .search-answer-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--te-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .search-answer-text { flex: 1; }
+  .search-answer-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--te-blue-deep); }
+  .search-answer-value { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .search-answer-action {
+    padding: 7px 12px;
+    background: white;
+    border: 1px solid var(--te-blue);
+    border-radius: 6px;
+    color: var(--te-blue);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .search-answer-action:hover { background: var(--te-blue); color: white; }
+  .search-answer-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 8px;
+  }
+  .search-answer-close:hover { color: var(--text); }
+
+  /* === Panneau Ask AI (Ollama) === */
+  .ai-panel {
+    margin: 12px 0 4px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+    border: 1px solid #C4B5FD;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.08);
+  }
+  .ai-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .ai-panel-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .ai-panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #5B21B6;
+    flex: 1;
+  }
+  .ai-panel-status {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ai-panel-status .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #9CA3AF;
+  }
+  .ai-panel-status.online .dot  { background: #10B981; }
+  .ai-panel-status.thinking .dot { background: #F59E0B; animation: ai-pulse 1.2s infinite; }
+  .ai-panel-status.offline .dot { background: #E63946; }
+  @keyframes ai-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .ai-panel-question {
+    font-size: 13px;
+    color: var(--text);
+    background: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #DDD6FE;
+  }
+  .ai-panel-question strong { color: #6D28D9; font-weight: 700; }
+  .ai-panel-response {
+    background: white;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    border: 1px solid #E9D5FF;
+    white-space: pre-wrap;
+    min-height: 40px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .ai-panel-response.empty { color: var(--text-muted); font-style: italic; }
+  .ai-panel-response code {
+    background: #F3F4F6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+  }
+  .ai-panel-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    align-items: center;
+  }
+  .ai-panel-action-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #C4B5FD;
+    border-radius: 6px;
+    color: #6D28D9;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .ai-panel-action-btn:hover { background: #6D28D9; color: white; }
+  .ai-panel-meta {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .ai-panel-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .ai-panel-error code {
+    background: #FEE2E2;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 11px;
+  }
+  /* "Ask AI" button in dropdown */
+  .ai-cta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ai-cta:hover { background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%); }
+  .ai-cta-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .ai-cta-text { flex: 1; }
+  .ai-cta-title { font-weight: 600; font-size: 13px; color: #5B21B6; }
+  .ai-cta-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  .container { max-width: 1600px; margin: 0 auto; padding: 24px 32px 48px; }
+
+  /* === KPI hero cards (blue gradient style from charter) === */
+  .kpi-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .kpi-blue {
+    background: linear-gradient(135deg, #0099FF 0%, #0072CE 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 24px 26px;
+    box-shadow: var(--shadow-blue);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-blue::after {
+    content: '';
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+  .kpi-blue .icon {
+    position: absolute;
+    top: 26px; right: 26px;
+    width: 28px; height: 28px;
+    z-index: 1;
+    color: white;
+    font-size: 22px;
+    line-height: 1;
+  }
+  .kpi-blue .kpi-value {
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 6px;
+    color: white;
+  }
+  .kpi-blue .kpi-value.small { font-size: 22px; color: white; }
+  .kpi-blue .kpi-label-big {
+    font-size: 15px;
+    font-weight: 600;
+    opacity: 0.95;
+    color: white;
+  }
+  .kpi-blue .kpi-sub {
+    font-size: 12px;
+    margin-top: 4px;
+    opacity: 0.85;
+    color: white;
+  }
+
+  /* Smaller KPI cards */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  /* Carte Décisions clés 2026 */
+  .decisions-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 18px 22px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .decisions-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .decisions-card-title .icon-deco {
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    background: linear-gradient(135deg, var(--te-blue) 0%, var(--te-cyan) 100%);
+    color: white;
+  }
+  .decisions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .decision-mini {
+    background: linear-gradient(135deg, #F8FAFC 0%, #EEF4F8 100%);
+    border-radius: 10px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--decision-color, var(--te-blue));
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .decision-mini.clickable {
+    cursor: pointer;
+    position: relative;
+  }
+  .decision-mini.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  }
+  .decision-mini.clickable::after {
+    content: "›";
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 18px;
+    color: var(--decision-color, var(--te-blue));
+    opacity: 0.4;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .decision-mini.clickable:hover::after { opacity: 1; }
+  .decision-mini-value {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--decision-color, var(--te-blue));
+  }
+  .decision-mini-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-top: 5px;
+    font-weight: 600;
+  }
+  .decision-mini-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .decisions-grid .decision-spacer {
+    border-left: 1px solid var(--border);
+    margin: 0 4px;
+    align-self: stretch;
+    width: 0;
+  }
+  .clickable-kpi {
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .clickable-kpi:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+  }
+  .kpi {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent, var(--te-blue));
+  }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .kpi-meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .kpi-meta .pos { color: var(--te-teal); font-weight: 600; }
+  .kpi-meta .neg { color: var(--te-red); font-weight: 600; }
+
+  /* === Phase Pipeline (chevrons) === */
+  .pipeline-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .pipeline-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .pipeline-title {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 16px; font-weight: 700;
+    color: var(--te-blue-deep);
+  }
+  .pipeline-title .icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--te-cyan), var(--te-blue));
+    color: white;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .chevrons {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 8px;
+    height: 88px;
+  }
+  .chevron {
+    flex: 1;
+    position: relative;
+    color: white;
+    padding: 14px 22px 14px 36px;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .chevron:first-child { padding-left: 22px; }
+  .chevron::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    right: -22px;
+    width: 22px;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+    background: inherit;
+    z-index: 1;
+  }
+  .chevron:not(:first-child)::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0;
+    width: 22px;
+    background: var(--bg);
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+    z-index: 0;
+  }
+  .chevron:last-child::before { display: none; }
+  .chevron:hover { filter: brightness(1.08); }
+  .chevron.active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 2;
+  }
+  .chevron.active::before { box-shadow: 4px 0 8px -4px rgba(0,0,0,0.15); }
+
+  .chevron-name {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.95;
+    margin-bottom: 4px;
+  }
+  .chevron-count {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .chevron-count .total { font-size: 12px; opacity: 0.75; font-weight: 500; }
+
+  .chevron[data-phase="PRE-FRAMING"] { background: #4DD0E1; }
+  .chevron[data-phase="FRAMING"]     { background: #00BFD6; }
+  .chevron[data-phase="BUILD 1ST DEPLOY"] { background: #0099FF; }
+  .chevron[data-phase="GROWTH"]      { background: #00B894; }
+  .chevron[data-phase="MAINTAIN"]    { background: #1F6FEB; }
+
+  .pipeline-end {
+    display: flex; gap: 10px; margin-top: 10px;
+  }
+  .pipeline-end-pill {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex: 1;
+  }
+  .pipeline-end-pill:hover { border-color: var(--text-muted); }
+  .pipeline-end-pill.active { border-color: var(--te-blue); box-shadow: 0 2px 8px rgba(0,114,206,0.15); }
+  .pill-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .pipeline-end-pill[data-phase="DISCARDED"] .pill-dot { background: #9CA3AF; }
+  .pipeline-end-pill[data-phase="DECOMMISSIONED"] .pill-dot { background: var(--te-red); }
+  .pill-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .pill-count { font-size: 16px; font-weight: 700; color: var(--text); margin-left: auto; }
+
+  /* === Filters === */
+  .filters {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .filter-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .filter-group select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    background: white;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230072CE' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    transition: border-color 0.15s;
+  }
+  .filter-group select:focus { outline: none; border-color: var(--te-blue); }
+
+  /* === Multi-select component === */
+  .multiselect {
+    position: relative;
+    width: 100%;
+  }
+  .multiselect summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    user-select: none;
+    transition: border-color 0.15s;
+  }
+  .multiselect summary::-webkit-details-marker { display: none; }
+  .multiselect summary:hover { border-color: var(--te-blue); }
+  .multiselect[open] summary { border-color: var(--te-blue); }
+  .ms-arrow { color: var(--text-muted); transition: transform 0.15s; flex-shrink: 0; margin-left: 8px; }
+  .multiselect[open] .ms-arrow { transform: rotate(180deg); }
+  .ms-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .ms-label.empty { color: var(--text-muted); }
+  .ms-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+  }
+  .ms-actions {
+    display: flex;
+    gap: 4px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .ms-actions button {
+    flex: 1;
+    padding: 5px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--te-blue);
+    font-family: inherit;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ms-actions button:hover { background: #EFF6FF; }
+  .ms-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .ms-option:hover { background: #F8FAFC; }
+  .ms-option input { cursor: pointer; }
+
+  /* === Onglet PVM === */
+  .pvm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+  }
+  .pvm-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .pvm-card:hover {
+    box-shadow: 0 8px 24px rgba(0,114,206,0.10);
+    transform: translateY(-2px);
+  }
+  .pvm-card-header {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .pvm-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .pvm-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .pvm-programs {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  .pvm-big-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border-radius: 10px;
+  }
+  .pvm-big-stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--te-blue);
+    line-height: 1;
+  }
+  .pvm-big-stat-label {
+    font-size: 12px;
+    color: #1E40AF;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pvm-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .pvm-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .pvm-phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pvm-phase-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+  }
+  .pvm-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .pvm-stat-mini {
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 8px;
+    background: #F9FAFB;
+    border: 1px solid var(--border);
+  }
+  .pvm-stat-mini-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .pvm-stat-mini-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+  .pvm-decisions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .pvm-decision-pill {
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+  }
+  .pvm-products-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 80px;
+    overflow-y: auto;
+  }
+  .pvm-product-chip {
+    padding: 3px 8px;
+    background: #F1F5F9;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+  }
+  .pvm-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    background: white;
+    border-radius: 14px;
+    border: 1px dashed var(--border);
+  }
+
+  /* === Onglet Roadmap === */
+  .roadmap-intro {
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    border-left: 4px solid var(--te-blue);
+  }
+  .roadmap-intro h3 {
+    margin: 0 0 6px 0;
+    color: #1E40AF;
+    font-size: 16px;
+  }
+  .roadmap-intro p {
+    margin: 0;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .roadmap-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 14px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin: 14px 0;
+    font-size: 12px;
+  }
+  .roadmap-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .roadmap-legend-item .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+  .roadmap-legend-item .swatch.planned {
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0,0,0,0.4) 3px, rgba(0,0,0,0.4) 5px);
+    background-color: #9CA3AF;
+    opacity: 0.7;
+  }
+  .gantt-container {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .gantt-header {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    background: #F8FAFC;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .gantt-header-label {
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+    border-right: 1px solid var(--border);
+  }
+  .gantt-header-track {
+    position: relative;
+    display: flex;
+  }
+  .gantt-month {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-right: 1px solid var(--border);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .gantt-month:last-child { border-right: none; }
+  .gantt-body { max-height: 70vh; overflow-y: auto; }
+  .gantt-row {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    border-bottom: 1px solid #F1F5F9;
+    transition: background 0.15s;
+  }
+  .gantt-row:hover { background: #FAFBFC; }
+  .gantt-row:last-child { border-bottom: none; }
+  .gantt-label {
+    padding: 10px 14px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+  }
+  .gantt-label-product {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .gantt-label-current {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .gantt-track {
+    position: relative;
+    height: 44px;
+    /* Subtiles lignes verticales pour repérer les mois */
+    background-image: linear-gradient(to right,
+      transparent calc(100%/12 - 1px), #F1F5F9 calc(100%/12 - 1px), #F1F5F9 calc(100%/12),
+      transparent calc(100%/12));
+    background-size: calc(100%/12 * 12) 100%;
+  }
+  .gantt-bar {
+    position: absolute;
+    top: 8px;
+    height: 28px;
+    border-radius: 5px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: help;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .gantt-bar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    z-index: 4;
+  }
+  .gantt-bar.planned {
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.3) 3px, rgba(255,255,255,0.3) 5px);
+    opacity: 0.85;
+  }
+  .gantt-bar.no-end-truncated {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    background-image: linear-gradient(to right, currentColor 80%, transparent);
+  }
+  .gantt-today-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #EF4444;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .gantt-today-line::before {
+    content: "Aujourd'hui";
+    position: absolute;
+    top: -22px;
+    left: -32px;
+    background: #EF4444;
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .gantt-empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .reset-btn {
+    background: var(--te-blue);
+    border: none;
+    color: white;
+    padding: 9px 18px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .reset-btn:hover { background: var(--te-blue-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,114,206,0.3); }
+
+  /* === Cards === */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--te-blue-deep);
+  }
+  .card-title .icon {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, var(--te-cyan-light), var(--te-blue-light));
+    color: var(--te-blue);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .card-meta {
+    font-size: 12px;
+    color: var(--te-blue);
+    background: var(--te-blue-light);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .chart-container { position: relative; height: 300px; }
+
+  /* === Drill down table === */
+  .table-section { margin-top: 24px; }
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .export-btn {
+    background: linear-gradient(135deg, #0099FF, #0072CE);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.15s;
+    box-shadow: 0 2px 6px rgba(0,114,206,0.25);
+  }
+  .export-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,114,206,0.35); }
+  .table-wrap {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .table-scroll { max-height: 540px; overflow-y: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead {
+    background: linear-gradient(180deg, #F8FAFC, #F1F5F9);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  th {
+    text-align: left;
+    padding: 13px 14px;
+    font-weight: 700;
+    color: var(--te-blue-deep);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #F3F4F6;
+    vertical-align: top;
+  }
+  tbody tr:hover { background: var(--te-blue-light); }
+  tbody tr td:first-child { color: var(--te-blue-deep); font-weight: 600; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-growth { background: var(--te-teal-light); color: #006847; }
+  .badge-maintain { background: #DBEAFE; color: #1E3A8A; }
+  .badge-build { background: #CCE7FF; color: #003D7A; }
+  .badge-discarded { background: #F3F4F6; color: #4B5563; }
+  .badge-framing { background: var(--te-cyan-light); color: #006978; }
+  .badge-decommissioned { background: var(--te-red-light); color: #991B1B; }
+  .badge-preframing { background: #E0F7FA; color: #006978; }
+  .status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .status-ontime { background: var(--te-teal); }
+  .status-late { background: var(--te-red); }
+  .empty-state {
+    text-align: center;
+    padding: 50px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .footer strong { color: var(--te-blue); }
+
+  /* === Liens Confluence === */
+  .confluence-link {
+    color: var(--te-blue);
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px dashed transparent;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .confluence-link:hover {
+    color: var(--te-blue-deep);
+    border-bottom-color: var(--te-blue);
+  }
+  .confluence-link-fallback {
+    color: var(--te-cyan);
+    border-bottom: 1px dotted var(--te-cyan);
+  }
+  .confluence-link-fallback:hover {
+    color: var(--te-blue);
+    border-bottom-color: var(--te-blue);
+  }
+  .confluence-link .ext-icon {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-left: 2px;
+    vertical-align: 1px;
+  }
+
+  /* === Modal de détail mensuel === */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 40, 90, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s, visibility 0.25s;
+  }
+  .modal-overlay.visible { opacity: 1; visibility: visible; }
+  .modal-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(900px, 100vw);
+    background: var(--bg);
+    z-index: 101;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -8px 0 32px rgba(20,40,90,0.18);
+  }
+  .modal-overlay.visible + .modal-panel { transform: translateX(0); }
+  .modal-header {
+    background: linear-gradient(135deg, #0099FF 0%, #0072CE 100%);
+    color: white;
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+  .modal-title-block { flex: 1; }
+  .modal-eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .modal-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .modal-stat {
+    background: rgba(255,255,255,0.18);
+    padding: 8px 14px;
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
+  }
+  .modal-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .modal-stat-label {
+    font-size: 11px;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 3px;
+  }
+  .modal-stats-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255,255,255,0.3);
+    align-self: center;
+    display: none;
+  }
+  .modal-stat-branche {
+    background: rgba(255,255,255,0.22);
+    padding: 6px 10px;
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 3px solid var(--branche-color, #fff);
+  }
+  .modal-stat-branche-name {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.9;
+  }
+  .modal-stat-branche-count {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .modal-stats-mini-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.3);
+    align-self: center;
+    margin: 0 4px;
+  }
+  .modal-close {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    color: white;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.3); }
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+  .event-card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent, var(--te-blue));
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .event-card:hover {
+    transform: translateX(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .event-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+  .event-product {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--te-blue-deep);
+    flex: 1;
+  }
+  .event-date-pill {
+    background: var(--te-blue-light);
+    color: var(--te-blue-deep);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .event-meta-item { display: flex; align-items: center; gap: 5px; }
+  .event-meta-item strong { color: var(--text); font-weight: 600; }
+  .event-comment {
+    background: #F8FAFC;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--text);
+    margin-top: 8px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .event-comment::before {
+    content: '💬 ';
+    margin-right: 4px;
+  }
+  .modal-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* === Modal grouped by branche === */
+  .branche-section {
+    background: white;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--accent, var(--te-blue));
+    overflow: hidden;
+  }
+  .branche-section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    background: linear-gradient(90deg, rgba(0,114,206,0.06), white);
+    border-bottom: 1px solid var(--border);
+  }
+  .branche-tag {
+    background: var(--accent, var(--te-blue));
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    letter-spacing: 0.04em;
+  }
+  .branche-info {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .branche-info strong {
+    color: var(--te-blue-deep);
+    font-weight: 700;
+  }
+  .ct-block {
+    padding: 14px 20px;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  .ct-block:last-child { border-bottom: none; }
+  .ct-block-date {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--te-blue-deep);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ct-block-date::before {
+    content: '📅';
+  }
+  .ct-block-count {
+    background: var(--te-blue-light);
+    color: var(--te-blue);
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: auto;
+  }
+  .ct-products {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ct-product {
+    background: #F8FAFC;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--product-accent, var(--te-blue));
+    transition: background 0.15s;
+  }
+  .ct-product:hover { background: #F1F5F9; }
+  .ct-product-name {
+    font-weight: 700;
+    color: var(--te-blue-deep);
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+  .ct-product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    align-items: center;
+  }
+  .ct-product-meta > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .ct-product-comment {
+    font-size: 12px;
+    color: var(--text);
+    background: white;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    border: 1px solid #E5E7EB;
+  }
+  .ct-product-comment::before {
+    content: '💬 ';
+    margin-right: 3px;
+    opacity: 0.6;
+  }
+  @media (max-width: 1200px) {
+    .kpi-hero { grid-template-columns: 1fr 1fr; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .filters { grid-template-columns: repeat(2, 1fr); }
+    .chevrons { flex-direction: column; height: auto; }
+    .chevron { padding: 12px 18px !important; }
+    .chevron::before, .chevron::after { display: none; }
+  }
+  /* === Tabs === */
+  .tabs-nav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--border);
+    margin: 0 0 24px 0;
+    background: var(--card);
+    border-radius: 12px 12px 0 0;
+    padding: 6px 12px 0 12px;
+    box-shadow: var(--shadow);
+  }
+  .tab-button {
+    padding: 12px 22px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .tab-button:hover { color: var(--te-blue); }
+  .tab-button.active {
+    color: var(--te-blue);
+    border-bottom-color: var(--te-blue);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* Portfolio tab styling */
+  .portfolio-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .portfolio-stat {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent, var(--te-blue));
+  }
+  .portfolio-stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .portfolio-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <img class="logo-img" src="data:image/jpeg;base64,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C+TA5W1ylM12fplXbmie3wRVYVK++O428xERUEQKcKTOlmdQDopUsAJw7p4hez4baOfqOs8pMCykjOXvx9S9LVE1vG/kU2afKp4vkxuVHerya84c0FLYXV1scfKQ++aO8eKs88BryC0g42WV614S88POoyaN0qCoVSgrynt9FO5QiIiiq7lSqj70dFPGap1C632IFIwXgHI9SuXwp4et1C19wuHNHRM6HHvivHJyKMandT6sTEry58aYWzf06KlXb4r8PKCy2kXO1SF7Ofle3uHqVpXZzgtAwsLGRTkUedK5eFXh1+FftCJ3BF9MPjiRERUERS3Odm52U9iFLd1U1gcQ0Zydwrq8OOHlJcqD753cvjieMxNAGHLyu3qbcdvDIy6MendS1PTqoPVXB4paNp9PmOro3k08xw30HqrfOHKcZyrauecdMrOTTfo3ShERer1EREBERBHepzhfSJnOWtBHM44aPFXS0dw8pJrSysvALJZhlkeOjfH1r3s2Jui1KL0/EDTTNO3XyUchfBIMxOPf4rzBztt6153KfGdAiIsAREQEREBERAREQEwfBS3OcjbxKrcRuQeVrfejxQQwOfhjQS/IDAB1JWQFMGcIuCIrPean1RF+Lzs+CncOuOoPM1eS7O+iYdRakmvd6HkrHZo/umqkHTmALmD5yMLouMmtZ9ea1q7wOYUUZLKOE9YYs5ACgp4Q6Urtd8QKS3xZIa81VTK4eb5Nh5n5PToCu87S2p6G/a5bb7Tg22zQihpi07Oa0nB+te0YHcHeDDnGKan1TqVo8kTs6GDo4f8AM1yx5y8l3Puc75QQiIqCIiAndlFOTytaPOwScIAByMA+jCy27MGhPvDYTqa4x8tdWjlha5ueVo3B+cFWL4E6Km1jrKnjkjLqOmPlZjjYgEZb86zap4oaeCOCN3LHDGGMZ+i0DH2IOl17qODSelK67VMjAI4yIGnH4w42CwLvtebleqqvczDp5XScuc4ySf8AVXg7U2vReb83TdvkDqGgdyyYOzng5B+gqyB23QD74knOUUlQgIiIClvVSgwSAe9PX7JEblyaaF81RHHC0vkkcGloGclZ4dnbQkeidExvlib931jRJM8jzm+j6Cse+ylw8Oo9SOvdwg5qC3kPBI2kdnHL9azMlkihY6SQhkMURc5x6NY0bn6F+bfmfL1VT/Cs+59t1hWI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" alt="Digital Cockpit logo">
+    <div>
+      <h1>Portfolio TDF</h1>
+      <div class="subtitle">Pilotage portefeuille &amp; suivi temporel · TotalEnergies Digital Factory</div>
+    </div>
+  </div>
+  <div class="searchbar-wrapper">
+    <span class="searchbar-icon">🔍</span>
+    <input type="text" class="searchbar" id="searchbar"
+           placeholder="Recherche : 'PVM de MasterMaint', 'produits en framing', 'prochaine CT EP'..."
+           autocomplete="off" spellcheck="false">
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Onglets -->
+  <div class="tabs-nav">
+    <button class="tab-button active" data-tab="cts">Suivi des CTs</button>
+    <button class="tab-button" data-tab="portfolio">TDF Portfolio</button>
+    <button class="tab-button" data-tab="pvm">PVM</button>
+    <button class="tab-button" data-tab="roadmap">Roadmap</button>
+  </div>
+
+  <!-- Smart Search answer area -->
+  <div id="search-answer-area"></div>
+
+  <!-- ========== ONGLET 1 : Suivi des CTs ========== -->
+  <div class="tab-pane active" id="tab-cts">
+
+  <!-- HERO KPI CARDS -->
+  <div class="kpi-hero">
+    <div class="kpi-blue">
+      <div class="icon">⬢</div>
+      <div class="kpi-value" id="kpi-products">—</div>
+      <div class="kpi-label-big">Produits du portefeuille TDF</div>
+      <div class="kpi-sub" id="kpi-products-sub">passés en CT</div>
+    </div>
+    <div class="kpi-blue" style="background: linear-gradient(135deg, #00BFD6 0%, #0099FF 100%);">
+      <div class="icon">▦</div>
+      <div class="kpi-value" id="kpi-events">—</div>
+      <div class="kpi-label-big">CTs tenues en 2026</div>
+      <div class="kpi-sub" id="kpi-events-sub">&nbsp;</div>
+    </div>
+    <div class="kpi-blue" style="background: linear-gradient(135deg, #00B894 0%, #00BFD6 100%);">
+      <div class="icon">✓</div>
+      <div class="kpi-value" id="kpi-ontime-pct">—</div>
+      <div class="kpi-label-big">On time</div>
+      <div class="kpi-sub" id="kpi-ontime-sub">— produits TDF à l'heure</div>
+    </div>
+    <div class="kpi-blue" style="background: linear-gradient(135deg, #1B2D8C 0%, #3D52E0 100%);">
+      <div class="icon">◴</div>
+      <div class="kpi-value small" id="kpi-next">—</div>
+      <div class="kpi-label-big">Prochaine échéance</div>
+      <div class="kpi-sub" id="kpi-next-product">—</div>
+    </div>
+  </div>
+
+  <!-- SECONDARY KPIs -->
+  <div class="kpi-row">
+    <div class="kpi clickable-kpi" id="kpi-preframing-card" style="--accent: var(--te-purple); cursor: pointer;">
+      <div class="kpi-label">Pre-framing 2026</div>
+      <div class="kpi-value" id="kpi-preframing">—</div>
+      <div class="kpi-meta">réalisés en 2026 · clic pour le détail</div>
+    </div>
+    <div class="kpi clickable-kpi" id="kpi-framing-card" style="--accent: var(--te-teal); cursor: pointer;">
+      <div class="kpi-label">Framing 2026</div>
+      <div class="kpi-value" id="kpi-framing">—</div>
+      <div class="kpi-meta">réalisés en 2026 · clic pour le détail</div>
+    </div>
+    <div class="kpi" style="--accent: var(--te-red);">
+      <div class="kpi-label">En retard</div>
+      <div class="kpi-value" id="kpi-late">—</div>
+      <div class="kpi-meta"><span class="neg" id="kpi-late-pct">—</span> du portefeuille à surveiller</div>
+    </div>
+    <div class="kpi" style="--accent: var(--te-red);">
+      <div class="kpi-label">CTs annulées</div>
+      <div class="kpi-value" id="kpi-cancelled">—</div>
+      <div class="kpi-meta">en 2026</div>
+    </div>
+  </div>
+
+  <!-- Décisions clés 2026 -->
+  <div class="decisions-card">
+    <div class="decisions-card-title"><span class="icon-deco">◆</span>Décisions clés 2026</div>
+    <div class="decisions-grid" id="decisions-grid"></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Branche</label>
+      <select id="filter-branche"><option value="">Toutes</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Phase</label>
+      <select id="filter-phase"><option value="">Toutes</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Value Stream</label>
+      <select id="filter-vs"><option value="">Tous</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Domain</label>
+      <select id="filter-domain"><option value="">Tous</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Product Owner</label>
+      <select id="filter-owner"><option value="">Tous</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Statut</label>
+      <select id="filter-status">
+        <option value="">Tous</option>
+        <option value="On time">On time</option>
+        <option value="Late">Late</option>
+      </select>
+    </div>
+    <button class="reset-btn" id="reset-btn">↺ Réinitialiser</button>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid-2" style="display: none;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">▤</span>Top Value Streams</div>
+        <span class="card-meta" id="vs-meta">—</span>
+      </div>
+      <div class="chart-container"><canvas id="chart-vs"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">●</span>Répartition par Domain</div>
+        <span class="card-meta" id="domain-meta">—</span>
+      </div>
+      <div class="chart-container"><canvas id="chart-domain"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="display: none;">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">♦</span>Top 10 Product Owners</div>
+        <span class="card-meta" id="owner-meta">—</span>
+      </div>
+      <div class="chart-container"><canvas id="chart-owner"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">▦</span>Timeline mensuelle — CT tenues</div>
+        <span class="card-meta" id="timeline-meta">—</span>
+      </div>
+      <div class="chart-container"><canvas id="chart-timeline"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon" style="background: linear-gradient(135deg, #FFB4BA, #E63946); color: white;">✕</span>Timeline mensuelle — CT annulées</div>
+        <span class="card-meta" id="timeline-cancelled-meta">—</span>
+      </div>
+      <div class="chart-container"><canvas id="chart-timeline-cancelled"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tableau 1 : Prochaines CT (futures) -->
+  <div class="table-section table-upcoming">
+    <div class="table-header">
+      <div class="card-title">
+        <span class="icon" style="background: linear-gradient(135deg, var(--te-cyan), var(--te-blue)); color: white;">⏱</span>
+        Prochaines CT
+        <span style="color:var(--text-muted); font-weight:400; font-size:13px; margin-left:8px;" id="upcoming-count">— résultats</span>
+      </div>
+      <button class="export-btn" id="export-upcoming-btn">⬇ Exporter en Excel</button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll" style="max-height: 360px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Branche</th>
+              <th>Phase</th>
+              <th>Value Stream</th>
+              <th>Domain</th>
+              <th>DDO</th>
+              <th>DSL</th>
+              <th>PVM</th>
+              <th>Product Owner</th>
+              <th>Statut</th>
+              <th>Confirmé</th>
+              <th>Date</th>
+              <th>Décision attendue</th>
+            </tr>
+          </thead>
+          <tbody id="upcoming-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau 2 : Historique des CT (passées) -->
+  <div class="table-section">
+    <div class="table-header">
+      <div class="card-title">
+        <span class="icon">≡</span>
+        Historique des CT
+        <span style="color:var(--text-muted); font-weight:400; font-size:13px; margin-left:8px;" id="history-count">— résultats</span>
+      </div>
+      <button class="export-btn" id="export-history-btn">⬇ Exporter en Excel</button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Branche</th>
+              <th>Phase</th>
+              <th>Value Stream</th>
+              <th>Domain</th>
+              <th>PVM</th>
+              <th>Product Owner</th>
+              <th>Statut</th>
+              <th>Confirmé</th>
+              <th>Date</th>
+              <th>Décision demandée</th>
+              <th>Lien vers le CR</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /tab-cts -->
+
+  <!-- ========== ONGLET 2 : TDF Portfolio ========== -->
+  <div class="tab-pane" id="tab-portfolio">
+
+    <!-- Stats portfolio -->
+    <div class="portfolio-summary" id="portfolio-summary"></div>
+    <div class="portfolio-summary" id="portfolio-summary-end"></div>
+
+    <!-- Filtres portfolio -->
+    <div class="filters">
+      <div class="filter-group">
+        <label>Branche</label>
+        <select id="filter-pf-branche"><option value="">Toutes</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Phase</label>
+        <select id="filter-pf-phase"><option value="">Toutes</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Domain</label>
+        <select id="filter-pf-domain"><option value="">Tous</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Programme</label>
+        <select id="filter-pf-programme"><option value="">Tous</option></select>
+      </div>
+      <div class="filter-group">
+        <label>PVM</label>
+        <select id="filter-pf-pvm"><option value="">Tous</option></select>
+      </div>
+      <button class="reset-btn" id="reset-pf-btn">Réinitialiser</button>
+    </div>
+
+    <!-- Table portfolio -->
+    <div class="table-section">
+      <div class="table-header">
+        <div class="card-title">
+          <span class="icon">⬢</span>
+          Portefeuille TDF complet
+          <span style="color:var(--text-muted); font-weight:400; font-size:13px; margin-left:8px;" id="portfolio-count">— produits</span>
+        </div>
+        <button class="export-btn" id="export-portfolio-btn">⬇ Exporter en Excel</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Branche</th>
+                <th>Phase actuelle</th>
+                <th>Programme</th>
+                <th>Value Stream</th>
+                <th>Domain</th>
+                <th>PVM</th>
+                <th>Product Owner</th>
+              </tr>
+            </thead>
+            <tbody id="portfolio-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-portfolio -->
+
+  <!-- ========== ONGLET 3 : PVM ========== -->
+  <div class="tab-pane" id="tab-pvm">
+
+    <!-- Filtres PVM -->
+    <div class="filters">
+      <div class="filter-group">
+        <label>PVM</label>
+        <select id="filter-pvm-pvm"><option value="">Tous</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Branche</label>
+        <select id="filter-pvm-branche"><option value="">Toutes</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Phase</label>
+        <select id="filter-pvm-phase"><option value="">Toutes</option></select>
+      </div>
+      <button class="reset-btn" id="reset-pvm-btn">Réinitialiser</button>
+    </div>
+
+    <!-- Grille des PVMs (1 carte par PVM) -->
+    <div class="pvm-grid" id="pvm-grid"></div>
+
+  </div><!-- /tab-pvm -->
+
+  <!-- ========== ONGLET 4 : Roadmap ========== -->
+  <div class="tab-pane" id="tab-roadmap">
+
+    <!-- Bandeau d'intro -->
+    <div class="roadmap-intro">
+      <div class="roadmap-intro-text">
+        <h3>Roadmap des produits TDF</h3>
+        <p>Visualisation des changements de phase de chaque produit sur la période sélectionnée. Chaque barre représente la durée d'une phase. Les pointillés indiquent les phases prévues (planifiées) sans date réelle.</p>
+      </div>
+    </div>
+
+    <!-- Filtres + sélecteur année -->
+    <div class="filters">
+      <div class="filter-group">
+        <label>Année</label>
+        <select id="filter-rm-year">
+          <option value="2026" selected>2026</option>
+          <option value="2025">2025</option>
+          <option value="2027">2027</option>
+          <option value="all">Toutes les dates</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Branche</label>
+        <select id="filter-rm-branche"><option value="">Toutes</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Phase actuelle</label>
+        <select id="filter-rm-phase"><option value="">Toutes</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Programme</label>
+        <select id="filter-rm-programme"><option value="">Tous</option></select>
+      </div>
+      <div class="filter-group">
+        <label>PVM</label>
+        <select id="filter-rm-pvm"><option value="">Tous</option></select>
+      </div>
+      <button class="reset-btn" id="reset-rm-btn">Réinitialiser</button>
+    </div>
+
+    <!-- Légende des phases -->
+    <div class="roadmap-legend" id="roadmap-legend"></div>
+
+    <!-- Vue Gantt -->
+    <div class="gantt-container">
+      <div class="gantt-header" id="gantt-header"></div>
+      <div class="gantt-body" id="gantt-body"></div>
+    </div>
+
+  </div><!-- /tab-roadmap -->
+
+</div>
+
+<!-- Modale de détail mensuel -->
+<div class="modal-overlay" id="modal-overlay"></div>
+<aside class="modal-panel" id="modal-panel">
+  <div class="modal-header">
+    <div class="modal-title-block">
+      <div class="modal-eyebrow">Détail des événements</div>
+      <div class="modal-title" id="modal-title">—</div>
+      <div class="modal-stats" id="modal-stats">
+        <div class="modal-stat">
+          <div class="modal-stat-value" id="modal-stat-total">0</div>
+          <div class="modal-stat-label">CTs</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-value" id="modal-stat-products">0</div>
+          <div class="modal-stat-label">Produits</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-value" id="modal-stat-late">0</div>
+          <div class="modal-stat-label">En retard</div>
+        </div>
+        <div class="modal-stats-divider" id="modal-stats-divider"></div>
+        <div id="modal-stats-branches" style="display: contents;"></div>
+      </div>
+    </div>
+    <button class="modal-close" id="modal-close" title="Fermer (Esc)">×</button>
+  </div>
+  <div class="modal-body" id="modal-body"></div>
+</aside>
+
+<script>
+const RAW_DATA = __DATA_PLACEHOLDER__;
+const CONFLUENCE_LINKS = __CONFLUENCE_LINKS_PLACEHOLDER__;
+const PORTFOLIO_PHASES = __PORTFOLIO_PHASES_PLACEHOLDER__;
+
+// Map nom-de-produit -> liste de PVMs (un produit peut avoir plusieurs PVMs)
+const PVM_BY_PRODUCT = {};
+const DDO_BY_PRODUCT = {};
+const DSL_BY_PRODUCT = {};
+(PORTFOLIO_PHASES || []).forEach(p => {
+  if (p.Produit && p.PVM) {
+    PVM_BY_PRODUCT[p.Produit] = p.PVM.split(',').map(s => s.trim()).filter(s => s);
+  }
+  if (p.Produit && p.DDO) DDO_BY_PRODUCT[p.Produit] = p.DDO;
+  if (p.Produit && p.DSL) DSL_BY_PRODUCT[p.Produit] = p.DSL;
+});
+function pvmFor(produit) {
+  return (PVM_BY_PRODUCT[produit] || []).join(', ');
+}
+function pvmListFor(produit) {
+  return PVM_BY_PRODUCT[produit] || [];
+}
+function ddoFor(produit) { return DDO_BY_PRODUCT[produit] || ''; }
+function dslFor(produit) { return DSL_BY_PRODUCT[produit] || ''; }
+
+let activeFilters = { branche: [], phase: [], vs: [], domain: [], owner: [], status: [] };
+const filterMSInstances = {};  // store multi-select API per filter
+let charts = {};
+
+const PHASE_COLORS = {
+  'PRE-FRAMING': '#4DD0E1',
+  'FRAMING': '#00BFD6',
+  'BUILD 1ST DEPLOY': '#0099FF',
+  'GROWTH': '#00B894',
+  'MAINTAIN': '#1F6FEB',
+  'DISCARDED': '#9CA3AF',
+  'DECOMMISSIONED': '#E63946'
+};
+const PHASE_BADGE = {
+  'PRE-FRAMING': 'badge-preframing',
+  'FRAMING': 'badge-framing',
+  'BUILD 1ST DEPLOY': 'badge-build',
+  'GROWTH': 'badge-growth',
+  'MAINTAIN': 'badge-maintain',
+  'DISCARDED': 'badge-discarded',
+  'DECOMMISSIONED': 'badge-decommissioned'
+};
+
+const DOMAIN_PALETTE = ['#0072CE','#00BFD6','#00B894','#3D52E0','#FFC72C','#FF8C00','#E63946','#4FCBA4','#9C27B0'];
+
+// === Helpers ===
+function uniqueValues(field, splitOwners=false) {
+  const set = new Set();
+  RAW_DATA.forEach(r => {
+    const v = r[field];
+    if (v == null || v === '') return;
+    if (splitOwners && typeof v === 'string') v.split(',').forEach(o => set.add(o.trim()));
+    else set.add(v);
+  });
+  return [...set].sort();
+}
+function applyFilters(data) {
+  return data.filter(r => {
+    if (activeFilters.branche.length && !activeFilters.branche.includes(r.Branche)) return false;
+    if (activeFilters.phase.length   && !activeFilters.phase.includes(r.Phase))     return false;
+    if (activeFilters.vs.length      && !activeFilters.vs.includes(r['Value Stream'])) return false;
+    if (activeFilters.domain.length  && !activeFilters.domain.includes(r.Domain))   return false;
+    if (activeFilters.status.length  && !activeFilters.status.includes(r['Current Phase Status'])) return false;
+    if (activeFilters.owner.length) {
+      const po = r['Product Owners'];
+      if (typeof po !== 'string') return false;
+      const owners = po.split(',').map(s => s.trim());
+      if (!activeFilters.owner.some(sel => owners.includes(sel))) return false;
+    }
+    return true;
+  });
+}
+function countBy(data, field, splitOwners=false) {
+  const counts = {};
+  data.forEach(r => {
+    const v = r[field];
+    if (v == null || v === '') return;
+    if (splitOwners && typeof v === 'string') v.split(',').forEach(o => { const k=o.trim(); counts[k]=(counts[k]||0)+1; });
+    else counts[v] = (counts[v] || 0) + 1;
+  });
+  return counts;
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// === Composant multi-select réutilisable ===
+function setupMultiSelect(selectId, options, defaultLabel, onChange) {
+  const select = document.getElementById(selectId);
+  if (!select) return null;
+
+  const wrapper = document.createElement('details');
+  wrapper.className = 'multiselect';
+  wrapper.dataset.id = selectId;
+
+  // Conserver l'attribut id pour rétrocompatibilité (refs dans renderPortfolio etc.)
+  // mais sur le wrapper plutôt que le select original
+  const escape = s => String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  wrapper.innerHTML = `
+    <summary class="ms-summary">
+      <span class="ms-label empty">${defaultLabel}</span>
+      <span class="ms-arrow">▾</span>
+    </summary>
+    <div class="ms-panel">
+      <div class="ms-actions">
+        <button type="button" data-action="all">Tout</button>
+        <button type="button" data-action="none">Aucun</button>
+      </div>
+      <div class="ms-options">
+        ${options.map(o => `<label class="ms-option"><input type="checkbox" value="${escape(o)}"> ${escape(o)}</label>`).join('')}
+      </div>
+    </div>`;
+  wrapper.id = selectId; // garder le même id pour les références
+  select.parentNode.replaceChild(wrapper, select);
+
+  const labelEl = wrapper.querySelector('.ms-label');
+  const checkboxes = () => wrapper.querySelectorAll('input[type="checkbox"]');
+
+  function getValues() {
+    return [...checkboxes()].filter(c => c.checked).map(c => c.value);
+  }
+  function updateLabel() {
+    const v = getValues();
+    if (v.length === 0) {
+      labelEl.textContent = defaultLabel;
+      labelEl.classList.add('empty');
+    } else if (v.length === 1) {
+      labelEl.textContent = v[0];
+      labelEl.classList.remove('empty');
+    } else {
+      labelEl.textContent = `${v.length} sélectionnés`;
+      labelEl.classList.remove('empty');
+    }
+  }
+
+  wrapper.addEventListener('change', e => {
+    if (e.target.matches('input[type="checkbox"]')) {
+      updateLabel();
+      onChange(getValues());
+    }
+  });
+  wrapper.querySelector('[data-action="all"]').addEventListener('click', e => {
+    e.preventDefault();
+    checkboxes().forEach(c => c.checked = true);
+    updateLabel();
+    onChange(getValues());
+  });
+  wrapper.querySelector('[data-action="none"]').addEventListener('click', e => {
+    e.preventDefault();
+    checkboxes().forEach(c => c.checked = false);
+    updateLabel();
+    onChange(getValues());
+  });
+
+  return {
+    getValues,
+    setValues(values) {
+      checkboxes().forEach(c => c.checked = values.includes(c.value));
+      updateLabel();
+    },
+    reset() {
+      checkboxes().forEach(c => c.checked = false);
+      updateLabel();
+    },
+  };
+}
+
+// Click outside : fermer toutes les listes ouvertes
+document.addEventListener('click', e => {
+  document.querySelectorAll('details.multiselect[open]').forEach(d => {
+    if (!d.contains(e.target)) d.removeAttribute('open');
+  });
+});
+
+// === Init filters (CTs tab) ===
+function initFilters() {
+  filterMSInstances.branche = setupMultiSelect('filter-branche', uniqueValues('Branche'), 'Toutes',
+    v => { activeFilters.branche = v; render(); });
+  filterMSInstances.phase = setupMultiSelect('filter-phase', uniqueValues('Phase'), 'Toutes',
+    v => { activeFilters.phase = v; render(); });
+  filterMSInstances.vs = setupMultiSelect('filter-vs', uniqueValues('Value Stream'), 'Tous',
+    v => { activeFilters.vs = v; render(); });
+  filterMSInstances.domain = setupMultiSelect('filter-domain', uniqueValues('Domain'), 'Tous',
+    v => { activeFilters.domain = v; render(); });
+  filterMSInstances.owner = setupMultiSelect('filter-owner', uniqueValues('Product Owners', true), 'Tous',
+    v => { activeFilters.owner = v; render(); });
+  filterMSInstances.status = setupMultiSelect('filter-status', ['On time', 'Late'], 'Tous',
+    v => { activeFilters.status = v; render(); });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    activeFilters = { branche: [], phase: [], vs: [], domain: [], owner: [], status: [] };
+    Object.values(filterMSInstances).forEach(ms => ms && ms.reset());
+    render();
+  });
+}
+
+// === Render ===
+function render() {
+  const data = applyFilters(RAW_DATA);
+  renderKPIs(data);
+  renderCharts(data);
+  renderTable(data);
+}
+
+function renderKPIs(data) {
+  const products = new Set(data.map(r => r.Produit)).size;
+  const totalProducts = new Set(RAW_DATA.map(r => r.Produit)).size;
+
+  // === On time : uniquement produits TDF (Delivery Center = TDF) ===
+  // On compte des PRODUITS uniques (pas des items / lignes)
+  const tdfRows = data.filter(r => r['Delivery Center'] === 'TDF');
+  const tdfProductSet = new Set(tdfRows.map(r => r.Produit));
+  const ontimeProductSet = new Set(
+    tdfRows.filter(r => r['Current Phase Status'] === 'On time').map(r => r.Produit)
+  );
+  const ontime = ontimeProductSet.size;
+  const tdfTotal = tdfProductSet.size;
+
+  const late = data.filter(r => r['Current Phase Status'] === 'Late').length;
+  const total = data.length;
+
+  // === CTs tenues en 2026 : couples (Branche × Date) en 2026 avec items Confirmed ou To be confirmed ===
+  const heldCTs2026Set = new Set();
+  data.forEach(r => {
+    if (!r.Date || !r.Date.startsWith('2026-')) return;
+    if (r['Statut Agenda'] !== 'Confirmed' && r['Statut Agenda'] !== 'To be confirmed') return;
+    heldCTs2026Set.add(`${r.Branche || '∅'}|${r.Date}`);
+  });
+  const heldCTs2026 = heldCTs2026Set.size;
+
+  // === Pre-framing 2026 / Framing 2026 (basé sur TOUT le portfolio TDF, pas filtré par CT) ===
+  const preframingProducts = (PORTFOLIO_PHASES || []).filter(p =>
+    (p['Pre-Framing End Date'] || '').startsWith('2026-')
+  );
+  const framingProducts = (PORTFOLIO_PHASES || []).filter(p =>
+    (p['Framing End Date'] || '').startsWith('2026-')
+  );
+  const ownerSet = new Set();
+  data.forEach(r => {
+    const po = r['Product Owners'];
+    if (typeof po === 'string') po.split(',').forEach(o => { if(o.trim()) ownerSet.add(o.trim()); });
+  });
+
+  const today = new Date().toISOString().slice(0,10);
+  const future = data.filter(r => r.Date >= today).sort((a,b) => a.Date.localeCompare(b.Date));
+  const nextEv = future[0];
+
+  document.getElementById('kpi-products').textContent = products;
+  document.getElementById('kpi-products-sub').textContent =
+    products === totalProducts ? 'passés en CT' : `${products} sur ${totalProducts} · passés en CT`;
+  document.getElementById('kpi-events').textContent = heldCTs2026;
+  document.getElementById('kpi-ontime-pct').textContent = tdfTotal ? `${Math.round(ontime/tdfTotal*100)}%` : '—';
+  document.getElementById('kpi-ontime-sub').textContent = `${ontime} produits TDF à l'heure`;
+  document.getElementById('kpi-late').textContent = late;
+  document.getElementById('kpi-late-pct').textContent = total ? `${Math.round(late/total*100)}%` : '—';
+  document.getElementById('kpi-preframing').textContent = preframingProducts.length;
+  document.getElementById('kpi-framing').textContent    = framingProducts.length;
+
+  // Sauver les listes pour la modale (au clic)
+  window._preframingProducts = preframingProducts;
+  window._framingProducts    = framingProducts;
+
+  // CTs annulées : compte les couples (Branche, Date) où TOUS les items sont Cancelled
+  // CTs annulées en 2026 : couples (Branche, Date) où TOUS les items sont Cancelled, en 2026 uniquement
+  const cancelledByKey2026 = {};
+  data.forEach(r => {
+    if (!r.Date || !r.Date.startsWith('2026-')) return;
+    const key = `${r.Branche || '∅'}|${r.Date}`;
+    if (!cancelledByKey2026[key]) cancelledByKey2026[key] = [];
+    cancelledByKey2026[key].push(r);
+  });
+  const cancelledCTs2026Count = Object.values(cancelledByKey2026)
+    .filter(items => items.every(it => it['Statut Agenda'] === 'Cancelled')).length;
+  document.getElementById('kpi-cancelled').textContent = cancelledCTs2026Count;
+  if (nextEv) {
+    document.getElementById('kpi-next').textContent = fmtDate(nextEv.Date);
+    document.getElementById('kpi-next-product').textContent = nextEv.Produit;
+  } else {
+    document.getElementById('kpi-next').textContent = '—';
+    document.getElementById('kpi-next-product').textContent = 'aucune à venir';
+  }
+
+  // === Décisions clés 2026 ===
+  renderDecisionsCard(data);
+}
+
+function renderDecisionsCard(data) {
+  const decisionDefs = [
+    { key: 'framing',  pattern: 'go for framing',  label: 'Go for framing',  color: '#00B894', alwaysShow: true },
+    { key: 'build',    pattern: 'go for build',    label: 'Go for build',    color: '#FF8C00', alwaysShow: true },
+    { key: 'growth',   pattern: 'go for growth',   label: 'Go for growth',   color: '#3D52E0', alwaysShow: false },
+    { key: 'maintain', pattern: 'go for maintain', label: 'Go for maintain', color: '#0072CE', alwaysShow: false },
+    { key: 'transfer', pattern: 'go for transfer', label: 'Go for transfer', color: '#9333EA', alwaysShow: true },
+  ];
+
+  const today = new Date().toISOString().slice(0,10);
+  const counts = {};
+  const nextOccurrences = {};
+
+  decisionDefs.forEach(d => {
+    counts[d.key] = 0;
+    nextOccurrences[d.key] = null;
+  });
+
+  data.forEach(r => {
+    const com = (r.Commentaire || '').toLowerCase();
+    if (!com) return;
+    const isYear2026 = (r.Date || '').startsWith('2026-');
+    decisionDefs.forEach(d => {
+      if (com.includes(d.pattern)) {
+        if (isYear2026) counts[d.key]++;
+        // Tracker la prochaine occurrence (date > today)
+        if (r.Date && r.Date > today) {
+          if (!nextOccurrences[d.key] || r.Date < nextOccurrences[d.key].Date) {
+            nextOccurrences[d.key] = r;
+          }
+        }
+      }
+    });
+  });
+
+  // Construire la liste des cartes à afficher
+  const cards = [];
+
+  // Cartes de comptes — cliquables si count > 0
+  decisionDefs.forEach(d => {
+    if (d.alwaysShow || counts[d.key] > 0) {
+      const isClickable = counts[d.key] > 0;
+      const cls = isClickable ? 'decision-mini clickable' : 'decision-mini';
+      const attrs = isClickable ? `data-decision-key="${d.key}"` : '';
+      cards.push(`<div class="${cls}" style="--decision-color: ${d.color};" ${attrs}>
+        <div class="decision-mini-value">${counts[d.key]}</div>
+        <div class="decision-mini-label">${d.label}</div>
+      </div>`);
+    }
+  });
+
+  // Séparateur visuel
+  cards.push('<div class="decision-spacer"></div>');
+
+  // Cartes "prochain" pour build et maintain
+  ['build', 'maintain'].forEach(key => {
+    const d = decisionDefs.find(x => x.key === key);
+    const next = nextOccurrences[key];
+    const dateText = next ? fmtDate(next.Date) : '—';
+    const subText = next ? `${next.Branche || ''} · ${(next.Produit || '').slice(0, 24)}${(next.Produit || '').length > 24 ? '…' : ''}` : 'aucune à venir';
+    cards.push(`<div class="decision-mini" style="--decision-color: ${d.color};">
+      <div class="decision-mini-value" style="font-size:16px;">${dateText}</div>
+      <div class="decision-mini-label">Prochain ${d.label.toLowerCase()}</div>
+      <div class="decision-mini-sub">${subText}</div>
+    </div>`);
+  });
+
+  document.getElementById('decisions-grid').innerHTML = cards.join('');
+
+  // Binding des cartes cliquables
+  document.querySelectorAll('#decisions-grid .decision-mini.clickable[data-decision-key]').forEach(el => {
+    el.addEventListener('click', () => {
+      const key = el.dataset.decisionKey;
+      const def = decisionDefs.find(x => x.key === key);
+      if (def) openDecisionModal(def, data);
+    });
+  });
+}
+
+// === Modale "Détail d'une décision clé 2026" ===
+function openDecisionModal(def, allData) {
+  // Filtrer : 2026 + commentaire contient le pattern
+  const rows = (allData || []).filter(r => {
+    const com = (r.Commentaire || '').toLowerCase();
+    const date2026 = (r.Date || '').startsWith('2026-');
+    return date2026 && com.includes(def.pattern);
+  });
+
+  // Grouper par Branche
+  const byBranche = {};
+  rows.forEach(r => {
+    const b = r.Branche || '—';
+    if (!byBranche[b]) byBranche[b] = [];
+    byBranche[b].push(r);
+  });
+  // Trier chaque groupe par date
+  Object.keys(byBranche).forEach(b => {
+    byBranche[b].sort((a, b) => (a.Date || '').localeCompare(b.Date || ''));
+  });
+
+  // Header
+  document.querySelector('.modal-eyebrow').textContent = 'Décisions clés 2026';
+  document.getElementById('modal-title').innerHTML =
+    `<span style="color:${def.color};">●</span> ${def.label} · ${rows.length} décision${rows.length > 1 ? 's' : ''}`;
+
+  // Stats : nb total, nb produits uniques, nb branches
+  const uniqProducts = new Set(rows.map(r => r.Produit)).size;
+  const nbBranches = Object.keys(byBranche).length;
+  document.getElementById('modal-stat-total').textContent = rows.length;
+  document.getElementById('modal-stat-products').textContent = uniqProducts;
+  document.getElementById('modal-stat-late').textContent = nbBranches;
+  const lateLabel = document.querySelector('#modal-stat-late').nextElementSibling;
+  if (lateLabel) lateLabel.textContent = 'Branches';
+  const productsLabel = document.querySelector('#modal-stat-products').nextElementSibling;
+  if (productsLabel) productsLabel.textContent = 'Produits';
+  const totalLabel = document.querySelector('#modal-stat-total').nextElementSibling;
+  if (totalLabel) totalLabel.textContent = 'Décisions';
+  // Cacher les stats par branche (système des modales mensuelles)
+  const branchesContainer = document.getElementById('modal-stats-branches');
+  if (branchesContainer) branchesContainer.innerHTML = '';
+  const divider = document.getElementById('modal-stats-divider');
+  if (divider) divider.style.display = 'none';
+
+  // Body : groupé par branche, tableau Produit / PVM / Phase / Date
+  const branches = Object.keys(byBranche).sort();
+  const html = branches.length === 0
+    ? '<div style="padding:32px;text-align:center;color:var(--text-muted);">Aucune décision trouvée pour ce filtre.</div>'
+    : branches.map(b => {
+      const items = byBranche[b];
+      const tableRows = items.map(r => {
+        const pvm = pvmFor(r.Produit) || '<span style="color:#9CA3AF;">—</span>';
+        const phaseClass = PHASE_BADGE[r.Phase] || 'badge-discarded';
+        return `<tr>
+          <td style="font-weight:600;">${r.Produit || '—'}</td>
+          <td><span class="badge ${phaseClass}" style="font-size:10px;">${r.Phase || '—'}</span></td>
+          <td>${pvm}</td>
+          <td>${fmtDate(r.Date)}</td>
+        </tr>`;
+      }).join('');
+      return `
+        <div style="margin-bottom:24px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${def.color}33;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${def.color};">${b}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${items.length} décision${items.length > 1 ? 's' : ''}</div>
+          </div>
+          <table class="table" style="width:100%;font-size:12px;">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Phase actuelle</th>
+                <th>PVM</th>
+                <th>Date décision</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div>`;
+    }).join('');
+  document.getElementById('modal-body').innerHTML = html;
+
+  // Ouvrir la modale
+  document.getElementById('modal-overlay').classList.add('visible');
+  document.getElementById('modal-panel').classList.add('visible');
+}
+
+function renderPipeline() {
+  // No-op (pipeline retirée)
+}
+
+function renderCharts(data) {
+  // Value Stream bar
+  const vsCounts = countBy(data, 'Value Stream');
+  const vsSorted = Object.entries(vsCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  renderOrUpdate('chart-vs', 'bar', {
+    labels: vsSorted.map(x => x[0]),
+    datasets: [{
+      data: vsSorted.map(x => x[1]),
+      backgroundColor: '#0072CE',
+      borderRadius: 6,
+      barThickness: 16,
+      hoverBackgroundColor: '#0099FF'
+    }]
+  }, {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 }} },
+      y: { grid: { display: false }, ticks: { font: { size: 11 }} }
+    },
+    onClick: (e, els) => {
+      if (els.length) {
+        const lbl = vsSorted[els[0].index][0];
+        activeFilters.vs = activeFilters.vs === lbl ? '' : lbl;
+        document.getElementById('filter-vs').value = activeFilters.vs;
+        render();
+      }
+    }
+  });
+  document.getElementById('vs-meta').textContent = `Top ${vsSorted.length}`;
+
+  // Domain donut
+  const domCounts = countBy(data, 'Domain');
+  const domLabels = Object.keys(domCounts);
+  renderOrUpdate('chart-domain', 'doughnut', {
+    labels: domLabels,
+    datasets: [{
+      data: domLabels.map(k => domCounts[k]),
+      backgroundColor: domLabels.map((_, i) => DOMAIN_PALETTE[i % DOMAIN_PALETTE.length]),
+      borderWidth: 3,
+      borderColor: '#fff'
+    }]
+  }, {
+    cutout: '60%',
+    plugins: {
+      legend: { position: 'right', labels: { font: { size: 11 }, usePointStyle: true, padding: 10, boxWidth: 8 } },
+      tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/data.length*100)}%)` }}
+    },
+    onClick: (e, els) => {
+      if (els.length) {
+        const lbl = domLabels[els[0].index];
+        activeFilters.domain = activeFilters.domain === lbl ? '' : lbl;
+        document.getElementById('filter-domain').value = activeFilters.domain;
+        render();
+      }
+    }
+  });
+  document.getElementById('domain-meta').textContent = `${domLabels.length} domains`;
+
+  // Owners
+  const ownCounts = countBy(data, 'Product Owners', true);
+  const ownSorted = Object.entries(ownCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  renderOrUpdate('chart-owner', 'bar', {
+    labels: ownSorted.map(x => x[0]),
+    datasets: [{
+      data: ownSorted.map(x => x[1]),
+      backgroundColor: '#00BFD6',
+      borderRadius: 6,
+      barThickness: 16,
+      hoverBackgroundColor: '#00B894'
+    }]
+  }, {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 }} },
+      y: { grid: { display: false }, ticks: { font: { size: 11 }} }
+    },
+    onClick: (e, els) => {
+      if (els.length) {
+        const lbl = ownSorted[els[0].index][0];
+        activeFilters.owner = activeFilters.owner === lbl ? '' : lbl;
+        document.getElementById('filter-owner').value = activeFilters.owner;
+        render();
+      }
+    }
+  });
+  document.getElementById('owner-meta').textContent = `Top ${ownSorted.length}`;
+
+  // ===== Timeline : grouper par (Branche, Date) =====
+  // Une CT est "annulée" si TOUS ses items sont à status 'Cancelled'
+  // Une CT est "tenue" sinon (au moins un Confirmed ou To be confirmed)
+  const ctsByKey = {}; // key -> {month, items: [...]}
+  data.forEach(r => {
+    if (!r.Date) return;
+    const key = `${r.Branche || 'Sans branche'}|${r.Date}`;
+    if (!ctsByKey[key]) ctsByKey[key] = { month: r.Date.slice(0,7), items: [] };
+    ctsByKey[key].items.push(r);
+  });
+
+  const monthlyHeld = {};
+  const monthlyCancelled = {};
+  Object.values(ctsByKey).forEach(ct => {
+    const allCancelled = ct.items.every(it => it['Statut Agenda'] === 'Cancelled');
+    const hasConfirmed = ct.items.some(it => it['Statut Agenda'] === 'Confirmed');
+    if (allCancelled) {
+      monthlyCancelled[ct.month] = (monthlyCancelled[ct.month] || 0) + 1;
+    } else if (hasConfirmed) {
+      // CT tenue = au moins un item Confirmed (les CTs uniquement "To be confirmed" sont exclues)
+      monthlyHeld[ct.month] = (monthlyHeld[ct.month] || 0) + 1;
+    }
+  });
+
+  // Mois utilisés pour les deux courbes (union triée)
+  const allMonths = [...new Set([...Object.keys(monthlyHeld), ...Object.keys(monthlyCancelled)])].sort();
+  const todayMonth = new Date().toISOString().slice(0,7);
+
+  // Timeline CTs tenues
+  renderOrUpdate('chart-timeline', 'bar', {
+    labels: allMonths.map(m => {
+      const [y, mm] = m.split('-');
+      const names = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+      return `${names[+mm-1]} ${y.slice(2)}`;
+    }),
+    datasets: [{
+      data: allMonths.map(m => monthlyHeld[m] || 0),
+      backgroundColor: allMonths.map(m => m >= todayMonth ? '#0072CE' : '#B7DDF8'),
+      hoverBackgroundColor: '#0099FF',
+      borderRadius: 6
+    }]
+  }, {
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y} CT${ctx.parsed.y > 1 ? 's' : ''} tenue${ctx.parsed.y > 1 ? 's' : ''} · clic pour voir le détail` }}
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 45, minRotation: 45 } },
+      y: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { font: { size: 11 }, stepSize: 1 } }
+    },
+    onClick: (e, els) => {
+      if (els.length) openMonthModal(allMonths[els[0].index]);
+    },
+    onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; }
+  });
+  document.getElementById('timeline-meta').textContent = `${Object.values(monthlyHeld).reduce((a,b)=>a+b,0)} CTs tenues · regroupé par branche × date`;
+
+  // Timeline CTs annulées
+  renderOrUpdate('chart-timeline-cancelled', 'bar', {
+    labels: allMonths.map(m => {
+      const [y, mm] = m.split('-');
+      const names = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+      return `${names[+mm-1]} ${y.slice(2)}`;
+    }),
+    datasets: [{
+      data: allMonths.map(m => monthlyCancelled[m] || 0),
+      backgroundColor: '#E63946',
+      hoverBackgroundColor: '#B30000',
+      borderRadius: 6
+    }]
+  }, {
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y} CT${ctx.parsed.y > 1 ? 's' : ''} annulée${ctx.parsed.y > 1 ? 's' : ''} · clic pour voir le détail` }}
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 45, minRotation: 45 } },
+      y: { beginAtZero: true, grid: { color: '#FCE7E9' }, ticks: { font: { size: 11 }, stepSize: 1 } }
+    },
+    onClick: (e, els) => {
+      if (els.length) openMonthModal(allMonths[els[0].index], 'cancelled');
+    },
+    onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; }
+  });
+  const totalCancelled = Object.values(monthlyCancelled).reduce((a,b)=>a+b,0);
+  document.getElementById('timeline-cancelled-meta').textContent = totalCancelled
+    ? `${totalCancelled} CTs annulées au total`
+    : 'aucune CT annulée';
+}
+
+function renderOrUpdate(canvasId, type, data, options) {
+  const canvas = document.getElementById(canvasId);
+  if (charts[canvasId]) charts[canvasId].destroy();
+  charts[canvasId] = new Chart(canvas, {
+    type, data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      ...options
+    }
+  });
+}
+
+function confirmedLabel(s) {
+  if (!s) return '<span style="color: #9CA3AF;">—</span>';
+  if (s === 'Confirmed') return '<span style="color: #00B894; font-weight: 600;">Oui</span>';
+  if (s === 'To be confirmed') return '<span style="color: #F59E0B; font-weight: 600;">À confirmer</span>';
+  if (s === 'Cancelled') return '<span style="color: #E63946; font-weight: 600;">Annulée</span>';
+  return s;
+}
+
+function crLinkCell(branche, date) {
+  if (!date || !CONFLUENCE_LINKS) return '<span style="color: #9CA3AF;">—</span>';
+
+  // 1) Match exact (Branche, Date)
+  const exactKey = `${branche || ''}|${date}`;
+  let conf = CONFLUENCE_LINKS[exactKey];
+  let isFallback = false;
+
+  // 2) Fallback : n'importe quelle CT à cette date
+  if (!conf) {
+    for (const k in CONFLUENCE_LINKS) {
+      if (k.endsWith('|' + date)) {
+        conf = CONFLUENCE_LINKS[k];
+        isFallback = true;
+        break;
+      }
+    }
+  }
+
+  if (!conf) return '<span style="color: #9CA3AF;">—</span>';
+
+  const tooltip = isFallback
+    ? `CT de ${conf.branche} du ${fmtDate(date)} — peut couvrir ce produit`
+    : "Ouvrir la page Confluence de cette CT";
+  const linkClass = isFallback ? "confluence-link confluence-link-fallback" : "confluence-link";
+  return `<a href="${conf.url}" target="_blank" rel="noopener" class="${linkClass}" title="${tooltip}">lien CR<span class="ext-icon">↗</span></a>`;
+}
+
+function rowHtml(r, includeCRLink, includeDDODSL) {
+  const phaseClass = PHASE_BADGE[r.Phase] || 'badge-discarded';
+  const statusClass = r['Current Phase Status'] === 'On time' ? 'status-ontime' : 'status-late';
+  const pvm = pvmFor(r.Produit);
+  const ddo = ddoFor(r.Produit);
+  const dsl = dslFor(r.Produit);
+  return `<tr>
+    <td>${r.Produit || '—'}</td>
+    <td>${r.Branche || '—'}</td>
+    <td><span class="badge ${phaseClass}">${r.Phase || '—'}</span></td>
+    <td>${r['Value Stream'] || '—'}</td>
+    <td>${r.Domain || '—'}</td>
+    ${includeDDODSL ? `<td>${ddo || '<span style="color:#9CA3AF;">—</span>'}</td><td>${dsl || '<span style="color:#9CA3AF;">—</span>'}</td>` : ''}
+    <td>${pvm || '<span style="color:#9CA3AF;">—</span>'}</td>
+    <td>${r['Product Owners'] || '—'}</td>
+    <td><span class="status-dot ${statusClass}"></span>${r['Current Phase Status'] || '—'}</td>
+    <td>${confirmedLabel(r['Statut Agenda'])}</td>
+    <td>${fmtDate(r.Date)}</td>
+    <td style="max-width:240px; white-space:normal;">${r.Commentaire || '—'}</td>
+    ${includeCRLink ? `<td>${crLinkCell(r.Branche, r.Date)}</td>` : ''}
+  </tr>`;
+}
+
+function renderTable(data) {
+  const today = new Date().toISOString().slice(0,10);
+
+  // Prochaines : date strictement supérieure à aujourd'hui ET statut Confirmed ou To be confirmed
+  const upcoming = data
+    .filter(r => r.Date && r.Date > today
+      && (r['Statut Agenda'] === 'Confirmed' || r['Statut Agenda'] === 'To be confirmed'))
+    .sort((a,b) => (b.Date || '').localeCompare(a.Date || ''));
+
+  // Historique : date <= aujourd'hui ET statut != Cancelled (uniquement CTs tenues)
+  const history = data
+    .filter(r => (!r.Date || r.Date <= today) && r['Statut Agenda'] !== 'Cancelled')
+    .sort((a,b) => (b.Date || '').localeCompare(a.Date || ''));
+
+  // Compteurs
+  // Prochaines : compte les CTs distincts (1 CT = 1 Branche × 1 Date) ET le nombre de produits
+  const upcomingCTs = new Set();
+  upcoming.forEach(r => upcomingCTs.add(`${r.Branche || '∅'}|${r.Date}`));
+  const upCT = upcomingCTs.size;
+  document.getElementById('upcoming-count').textContent =
+    `${upCT} CT${upCT > 1 ? 's' : ''} à venir, ${upcoming.length} produit${upcoming.length > 1 ? 's' : ''}`;
+
+  // Historique : nombre de produits (1 ligne = 1 produit)
+  document.getElementById('history-count').textContent =
+    `${history.length} produit${history.length > 1 ? 's' : ''}`;
+
+  // Rendu Prochaines (sans colonne Lien vers le CR)
+  const upBody = document.getElementById('upcoming-body');
+  if (!upcoming.length) {
+    upBody.innerHTML = '<tr><td colspan="13" class="empty-state">Aucune CT planifiée à venir</td></tr>';
+  } else {
+    upBody.innerHTML = upcoming.map(r => rowHtml(r, false, true)).join('');
+  }
+
+  // Rendu Historique (avec colonne Lien vers le CR)
+  const histBody = document.getElementById('history-body');
+  if (!history.length) {
+    histBody.innerHTML = '<tr><td colspan="12" class="empty-state">Aucune CT dans l\'historique</td></tr>';
+  } else {
+    histBody.innerHTML = history.map(r => rowHtml(r, true)).join('');
+  }
+}
+
+// === Excel export ===
+function findCRLink(branche, date) {
+  if (!date || !CONFLUENCE_LINKS) return '';
+  const exactKey = `${branche || ''}|${date}`;
+  if (CONFLUENCE_LINKS[exactKey]) return CONFLUENCE_LINKS[exactKey].url;
+  for (const k in CONFLUENCE_LINKS) {
+    if (k.endsWith('|' + date)) return CONFLUENCE_LINKS[k].url;
+  }
+  return '';
+}
+
+function buildExcel(rows, sheetName, filenameLabel, includeCRLink) {
+  const sorted = [...rows].sort((a,b) => (b.Date || '').localeCompare(a.Date || ''));
+  const ws = XLSX.utils.json_to_sheet(sorted.map(r => {
+    const row = {
+      'Produit': r.Produit,
+      'Branche': r.Branche,
+      'Phase': r.Phase,
+      'Value Stream': r['Value Stream'],
+      'Discipline': r.Discipline,
+      'Domain': r.Domain,
+      'DDO': ddoFor(r.Produit),
+      'DSL': dslFor(r.Produit),
+      'Delivery Center': r['Delivery Center'],
+      'Entity Owner': r['Entity Owner'],
+      'Statut': r['Current Phase Status'],
+      'Confirmé': r['Statut Agenda'] === 'Confirmed' ? 'Oui' : (r['Statut Agenda'] === 'To be confirmed' ? 'À confirmer' : ''),
+      'PVM': pvmFor(r.Produit),
+      'Product Owners': r['Product Owners'],
+      'Date': r.Date,
+      'Décision': r.Commentaire,
+    };
+    if (includeCRLink) row['Lien vers le CR'] = findCRLink(r.Branche, r.Date);
+    return row;
+  }));
+  const cols = [
+    {wch:35},{wch:10},{wch:18},{wch:22},{wch:22},{wch:18},{wch:22},{wch:22},
+    {wch:14},{wch:16},{wch:12},{wch:14},{wch:22},{wch:28},{wch:12},{wch:50}
+  ];
+  if (includeCRLink) cols.push({wch:60});
+  ws['!cols'] = cols;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  const ts = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `${filenameLabel}-${ts}.xlsx`);
+}
+
+document.getElementById('export-upcoming-btn').addEventListener('click', () => {
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = applyFilters(RAW_DATA).filter(r => r.Date && r.Date > today);
+  buildExcel(upcoming, 'Prochaines CT', 'prochaines-ct', false);
+});
+
+document.getElementById('export-history-btn').addEventListener('click', () => {
+  const today = new Date().toISOString().slice(0,10);
+  const history = applyFilters(RAW_DATA).filter(r => !r.Date || r.Date <= today);
+  buildExcel(history, 'Historique CT', 'historique-ct', true);
+});
+
+// === Modale détail mensuel ===
+const BRANCHE_COLORS = {
+  'EP':  '#0072CE',
+  'RC':  '#FF8C00',
+  'GRP': '#3D52E0',
+  'MS':  '#00B894',
+  'OT':  '#9CA3AF',
+  'Sans branche': '#9CA3AF'
+};
+
+function openMonthModal(monthKey, mode) {
+  // mode = 'held' (défaut) ou 'cancelled'
+  mode = mode || 'held';
+
+  // Filtrer les events du mois
+  const monthData = applyFilters(RAW_DATA).filter(r => r.Date && r.Date.slice(0,7) === monthKey);
+
+  // Grouper par (Branche, Date) puis catégoriser : tenue (au moins 1 non-Cancelled) ou annulée (tous Cancelled)
+  const ctsByKey = {};
+  monthData.forEach(r => {
+    const key = `${r.Branche || 'Sans branche'}|${r.Date}`;
+    if (!ctsByKey[key]) ctsByKey[key] = { branche: r.Branche || 'Sans branche', date: r.Date, items: [] };
+    ctsByKey[key].items.push(r);
+  });
+
+  // Sélection des CTs selon le mode
+  const selectedCTs = Object.values(ctsByKey).filter(ct => {
+    const allCancelled = ct.items.every(it => it['Statut Agenda'] === 'Cancelled');
+    const hasConfirmed = ct.items.some(it => it['Statut Agenda'] === 'Confirmed');
+    if (mode === 'cancelled') return allCancelled;
+    return hasConfirmed;  // mode 'held' = CT avec au moins 1 Confirmed
+  });
+
+  // Grouper sélection par branche pour l'affichage
+  const grouped = {};
+  selectedCTs.forEach(ct => {
+    if (!grouped[ct.branche]) grouped[ct.branche] = {};
+    grouped[ct.branche][ct.date] = ct.items;
+  });
+
+  const branches = Object.keys(grouped).sort((a, b) => {
+    if (a === 'Sans branche') return 1;
+    if (b === 'Sans branche') return -1;
+    return a.localeCompare(b);
+  });
+
+  // Stats
+  const [year, mm] = monthKey.split('-');
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const eyebrowEl = document.querySelector('.modal-eyebrow');
+  document.getElementById('modal-title').textContent = `${monthNames[+mm-1]} ${year}`;
+  if (eyebrowEl) eyebrowEl.textContent = mode === 'cancelled' ? 'CTs annulées' : 'Détail des événements';
+
+  const totalCTs = selectedCTs.length;
+  const allItems = selectedCTs.flatMap(ct => ct.items);
+  const distinctProducts = new Set(allItems.map(r => r.Produit)).size;
+  const lateCount = allItems.filter(r => r['Current Phase Status'] === 'Late').length;
+
+  document.getElementById('modal-stat-total').textContent = totalCTs;
+  document.getElementById('modal-stat-products').textContent = distinctProducts;
+  document.getElementById('modal-stat-late').textContent = lateCount;
+
+  // Stats : adapter selon le mode
+  const stats = document.querySelectorAll('#modal-stats > .modal-stat');
+  if (stats.length >= 3) {
+    stats[0].style.display = '';                                    // CTs (toujours visible)
+    stats[1].style.display = mode === 'cancelled' ? 'none' : '';    // Produits (only in held)
+    stats[2].style.display = 'none';                                // En retard (jamais)
+    const firstLabel = stats[0].querySelector('.modal-stat-label');
+    if (firstLabel) firstLabel.textContent = mode === 'cancelled' ? 'CTs annulées' : 'CTs tenues';
+  }
+
+  // Mini-stat par branche, dans les deux modes
+  const branchesStatsEl = document.getElementById('modal-stats-branches');
+  const dividerEl = document.getElementById('modal-stats-divider');
+  branchesStatsEl.innerHTML = '';
+  dividerEl.style.display = 'none';
+
+  if (totalCTs > 0) {
+    // Compter les CTs par branche
+    const byBranche = {};
+    selectedCTs.forEach(ct => {
+      byBranche[ct.branche] = (byBranche[ct.branche] || 0) + 1;
+    });
+    const sortedBranches = Object.entries(byBranche).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+    let html = sortedBranches.map(([branche, count]) => {
+      const color = BRANCHE_COLORS[branche] || BRANCHE_COLORS['Sans branche'];
+      return `<div class="modal-stat-branche" style="--branche-color: ${color};">
+        <div class="modal-stat-branche-count">${count}</div>
+        <div class="modal-stat-branche-name">${branche}</div>
+      </div>`;
+    }).join('');
+
+    // En mode held : compter aussi les "go for framing" et "go for build" dans les commentaires
+    if (mode === 'held') {
+      let nbFraming = 0, nbBuild = 0;
+      selectedCTs.forEach(ct => {
+        ct.items.forEach(it => {
+          const com = (it.Commentaire || '').toLowerCase();
+          if (com.includes('go for framing')) nbFraming++;
+          if (com.includes('go for build'))   nbBuild++;
+        });
+      });
+
+      const decisionPills = [];
+      if (nbFraming > 0) {
+        decisionPills.push(`<div class="modal-stat-branche modal-stat-decision" style="--branche-color: #00B894;">
+          <div class="modal-stat-branche-count">${nbFraming}</div>
+          <div class="modal-stat-branche-name">Go for framing</div>
+        </div>`);
+      }
+      if (nbBuild > 0) {
+        decisionPills.push(`<div class="modal-stat-branche modal-stat-decision" style="--branche-color: #FF8C00;">
+          <div class="modal-stat-branche-count">${nbBuild}</div>
+          <div class="modal-stat-branche-name">Go for build</div>
+        </div>`);
+      }
+      if (decisionPills.length > 0) {
+        html += `<div class="modal-stats-mini-divider"></div>` + decisionPills.join('');
+      }
+    }
+
+    branchesStatsEl.innerHTML = html;
+    if (sortedBranches.length > 0) dividerEl.style.display = 'block';
+  }
+
+  const body = document.getElementById('modal-body');
+  if (!totalCTs) {
+    const emptyMsg = mode === 'cancelled'
+      ? 'Aucune CT annulée pour ce mois'
+      : 'Aucun événement pour ce mois avec les filtres actuels';
+    body.innerHTML = `<div class="modal-empty">${emptyMsg}</div>`;
+  } else {
+    body.innerHTML = branches.map(branche => {
+      const dates = Object.keys(grouped[branche]).sort();
+      const ctCount = dates.length;
+      const productCount = dates.reduce((acc, d) => acc + grouped[branche][d].length, 0);
+      const accent = BRANCHE_COLORS[branche] || BRANCHE_COLORS['Sans branche'];
+
+      const ctBlocks = dates.map(date => {
+        const products = grouped[branche][date];
+
+        // En mode cancelled, on n'affiche pas les produits ni le compte
+        if (mode === 'cancelled') {
+          return `
+            <div class="ct-block">
+              <div class="ct-block-date">${(() => {
+                const k = `${branche}|${date}`;
+                const conf = CONFLUENCE_LINKS && CONFLUENCE_LINKS[k];
+                const txt = `CT du ${fmtDate(date)}`;
+                return conf
+                  ? `<a href="${conf.url}" target="_blank" rel="noopener" class="confluence-link" title="Ouvrir la page Confluence">${txt}<span class="ext-icon">↗</span></a>`
+                  : txt;
+              })()}</div>
+            </div>`;
+        }
+
+        // Mode held : on affiche les produits comme avant
+        const productItems = products.map(p => {
+          const phaseClass = PHASE_BADGE[p.Phase] || 'badge-discarded';
+          const phaseColor = PHASE_COLORS[p.Phase] || '#6B7280';
+          const statusClass = p['Current Phase Status'] === 'On time' ? 'status-ontime' : 'status-late';
+          const pvm = pvmFor(p.Produit);
+          return `
+            <div class="ct-product" style="--product-accent: ${phaseColor};">
+              <div class="ct-product-name">${p.Produit || '—'}</div>
+              <div class="ct-product-meta">
+                <span class="badge ${phaseClass}">${p.Phase || '—'}</span>
+                <span><span class="status-dot ${statusClass}"></span>${p['Current Phase Status'] || '—'}</span>
+                <span>${confirmedLabel(p['Statut Agenda'])}</span>
+                ${p['Value Stream'] ? `<span>▤ ${p['Value Stream']}</span>` : ''}
+                ${p.Domain ? `<span>● ${p.Domain}</span>` : ''}
+                ${pvm ? `<span>★ PVM : ${pvm}</span>` : ''}
+                ${p['Product Owners'] ? `<span>👤 ${p['Product Owners']}</span>` : ''}
+              </div>
+              ${p.Commentaire ? `<div class="ct-product-comment">${p.Commentaire}</div>` : ''}
+            </div>`;
+        }).join('');
+
+        return `
+          <div class="ct-block">
+            <div class="ct-block-date">${(() => {
+              const k = `${branche}|${date}`;
+              const conf = CONFLUENCE_LINKS && CONFLUENCE_LINKS[k];
+              const txt = `CT du ${fmtDate(date)}`;
+              return conf
+                ? `<a href="${conf.url}" target="_blank" rel="noopener" class="confluence-link" title="Ouvrir la page Confluence">${txt}<span class="ext-icon">↗</span></a>`
+                : txt;
+            })()}<span class="ct-block-count">${products.length} produit${products.length > 1 ? 's' : ''}</span></div>
+            <div class="ct-products">${productItems}</div>
+          </div>`;
+      }).join('');
+
+      // En mode cancelled, l'info de droite ne montre pas le nombre de produits
+      const brancheInfoText = mode === 'cancelled'
+        ? `<strong>${ctCount} CT${ctCount > 1 ? 's' : ''} annulée${ctCount > 1 ? 's' : ''}</strong>`
+        : `<strong>${ctCount} CT${ctCount > 1 ? 's' : ''}</strong> · ${productCount} produit${productCount > 1 ? 's' : ''}`;
+
+      return `
+        <div class="branche-section" style="--accent: ${accent};">
+          <div class="branche-section-header">
+            <div class="branche-tag">${branche}</div>
+            <div class="branche-info">${brancheInfoText}</div>
+          </div>
+          ${ctBlocks}
+        </div>`;
+    }).join('');
+    body.scrollTop = 0;
+  }
+
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function closeMonthModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+}
+
+document.getElementById('modal-overlay').addEventListener('click', closeMonthModal);
+document.getElementById('modal-close').addEventListener('click', closeMonthModal);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeMonthModal();
+});
+
+// === Modale phase 2026 (pre-framing / framing) ===
+function openPhaseModal(phaseLabel, dateField, products) {
+  // Réutilise la modale principale
+  document.querySelector('.modal-eyebrow').textContent = `${phaseLabel} 2026`;
+  document.getElementById('modal-title').textContent = `${products.length} produit${products.length > 1 ? 's' : ''}`;
+
+  // Stats : afficher seulement le total
+  const stats = document.querySelectorAll('#modal-stats > .modal-stat');
+  if (stats.length >= 3) {
+    stats[0].style.display = '';
+    stats[1].style.display = 'none';
+    stats[2].style.display = 'none';
+    stats[0].querySelector('.modal-stat-value').textContent = products.length;
+    stats[0].querySelector('.modal-stat-label').textContent = 'Produits';
+  }
+
+  // Vider les pills par branche
+  document.getElementById('modal-stats-branches').innerHTML = '';
+  document.getElementById('modal-stats-divider').style.display = 'none';
+
+  // Construire la liste des produits triée par date
+  const sorted = [...products].sort((a, b) => (a[dateField] || '').localeCompare(b[dateField] || ''));
+  const body = document.getElementById('modal-body');
+
+  if (!sorted.length) {
+    body.innerHTML = `<div class="modal-empty">Aucun produit en ${phaseLabel.toLowerCase()} en 2026</div>`;
+  } else {
+    body.innerHTML = sorted.map(p => {
+      const phaseClass = PHASE_BADGE[p.Phase] || 'badge-discarded';
+      const phaseColor = PHASE_COLORS[p.Phase] || '#6B7280';
+      const branche = p.Branche || 'Sans branche';
+      const brancheColor = BRANCHE_COLORS[branche] || BRANCHE_COLORS['Sans branche'];
+      const pvm = pvmFor(p.Produit) || p.PVM;  // p.PVM en fallback (provient déjà du portfolio_phases)
+      return `
+        <div class="ct-product" style="--product-accent: ${phaseColor}; margin-bottom: 10px;">
+          <div class="ct-product-name">${p.Produit || '—'}</div>
+          <div class="ct-product-meta">
+            <span class="branche-tag" style="background: ${brancheColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${branche}</span>
+            <span class="badge ${phaseClass}">Phase actuelle: ${p.Phase || '—'}</span>
+            <span>📅 fin ${phaseLabel.toLowerCase()} : <strong>${fmtDate(p[dateField])}</strong></span>
+            ${p['Value Stream'] ? `<span>▤ ${p['Value Stream']}</span>` : ''}
+            ${p.Domain ? `<span>● ${p.Domain}</span>` : ''}
+            ${pvm ? `<span>★ PVM : ${pvm}</span>` : ''}
+            ${p['Product Owners'] ? `<span>👤 ${p['Product Owners']}</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    body.scrollTop = 0;
+  }
+
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+document.getElementById('kpi-preframing-card').addEventListener('click', () => {
+  openPhaseModal('Pre-framing', 'Pre-Framing End Date', window._preframingProducts || []);
+});
+document.getElementById('kpi-framing-card').addEventListener('click', () => {
+  openPhaseModal('Framing', 'Framing End Date', window._framingProducts || []);
+});
+
+// === Tabs ===
+document.querySelectorAll('.tab-button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.dataset.tab;
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-pane').forEach(p =>
+      p.classList.toggle('active', p.id === `tab-${tabId}`)
+    );
+    if (tabId === 'portfolio') renderPortfolio();
+    if (tabId === 'pvm') renderPVM();
+    if (tabId === 'roadmap') renderRoadmap();
+  });
+});
+
+// === Onglet Roadmap (Gantt) ===
+const roadmapFilters = { year: '2026', branche: [], phase: [], programme: [], pvm: [] };
+const roadmapMS = {};
+let roadmapInited = false;
+
+const ROADMAP_PHASE_COLORS = {
+  'PRE-FRAMING':       '#7C3AED',
+  'FRAMING':           '#0072CE',
+  'BUILD 1ST DEPLOY':  '#00BFD6',
+  'GROWTH':            '#00B894',
+  'MAINTAIN':          '#3D52E0',
+  'DISCARDED':         '#9CA3AF',
+  'DECOMMISSIONED':    '#E63946',
+};
+const ROADMAP_PHASE_ORDER = ['PRE-FRAMING','FRAMING','BUILD 1ST DEPLOY','GROWTH','MAINTAIN'];
+
+function getYearRange(yearVal) {
+  // Retourne [startDate, endDate, months[]] selon le filtre année
+  if (yearVal === 'all') {
+    // 2024 → 2027 inclus (4 ans = 48 mois) — devrait suffire
+    return [new Date('2024-01-01'), new Date('2027-12-31'), 4 * 12];
+  }
+  const year = parseInt(yearVal, 10);
+  return [new Date(`${year}-01-01`), new Date(`${year}-12-31`), 12];
+}
+
+function renderRoadmap() {
+  const items = (PORTFOLIO_PHASES || []).filter(p => p.PhasesTimeline);
+
+  // Init des filtres
+  if (!roadmapInited) {
+    roadmapMS.branche = setupMultiSelect('filter-rm-branche',
+      [...new Set(items.map(p => p.Branche).filter(v => v))].sort(),
+      'Toutes', v => { roadmapFilters.branche = v; renderRoadmap(); });
+    roadmapMS.phase = setupMultiSelect('filter-rm-phase',
+      [...new Set(items.map(p => p.Phase).filter(v => v))].sort(),
+      'Toutes', v => { roadmapFilters.phase = v; renderRoadmap(); });
+    roadmapMS.programme = setupMultiSelect('filter-rm-programme',
+      [...new Set(items.map(p => p.Programme).filter(v => v))].sort(),
+      'Tous', v => { roadmapFilters.programme = v; renderRoadmap(); });
+    roadmapMS.pvm = setupMultiSelect('filter-rm-pvm',
+      [...new Set(items.flatMap(p => (p.PVM || '').split(',').map(s => s.trim()).filter(s => s)))].sort(),
+      'Tous', v => { roadmapFilters.pvm = v; renderRoadmap(); });
+
+    document.getElementById('filter-rm-year').addEventListener('change', e => {
+      roadmapFilters.year = e.target.value;
+      renderRoadmap();
+    });
+    document.getElementById('reset-rm-btn').addEventListener('click', () => {
+      roadmapFilters.year = '2026';
+      roadmapFilters.branche = []; roadmapFilters.phase = [];
+      roadmapFilters.programme = []; roadmapFilters.pvm = [];
+      document.getElementById('filter-rm-year').value = '2026';
+      Object.values(roadmapMS).forEach(ms => ms && ms.reset());
+      renderRoadmap();
+    });
+    roadmapInited = true;
+  }
+
+  // Filtrer
+  const filtered = items.filter(p => {
+    if (roadmapFilters.branche.length && !roadmapFilters.branche.includes(p.Branche)) return false;
+    if (roadmapFilters.phase.length && !roadmapFilters.phase.includes(p.Phase)) return false;
+    if (roadmapFilters.programme.length && !roadmapFilters.programme.includes(p.Programme)) return false;
+    if (roadmapFilters.pvm.length) {
+      const pvms = pvmListFor(p.Produit);
+      if (!pvms.some(v => roadmapFilters.pvm.includes(v))) return false;
+    }
+    return true;
+  });
+
+  // Période visible (timeline X axis)
+  const [winStart, winEnd, totalMonths] = getYearRange(roadmapFilters.year);
+  const winStartMs = winStart.getTime();
+  const winEndMs = winEnd.getTime();
+  const winDurationMs = winEndMs - winStartMs;
+
+  // Génère les en-têtes de mois
+  const monthNames = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+  const header = document.getElementById('gantt-header');
+  let monthCells = '';
+  const startYear = winStart.getFullYear();
+  const yearsSpan = winEnd.getFullYear() - startYear + 1;
+  for (let yy = 0; yy < yearsSpan; yy++) {
+    const yearVal = startYear + yy;
+    for (let mm = 0; mm < 12; mm++) {
+      const label = yearsSpan > 1 ? `${monthNames[mm]} ${String(yearVal).slice(-2)}` : monthNames[mm];
+      monthCells += `<div class="gantt-month">${label}</div>`;
+    }
+  }
+  header.innerHTML = `
+    <div class="gantt-header-label">Produit</div>
+    <div class="gantt-header-track">${monthCells}</div>`;
+
+  // Légende
+  const legend = document.getElementById('roadmap-legend');
+  legend.innerHTML = ROADMAP_PHASE_ORDER.map(ph =>
+    `<span class="roadmap-legend-item"><span class="swatch" style="background:${ROADMAP_PHASE_COLORS[ph]};"></span>${ph}</span>`
+  ).join('') +
+    `<span class="roadmap-legend-item"><span class="swatch planned"></span>Planifiée (date prévisionnelle)</span>` +
+    `<span class="roadmap-legend-item"><span class="swatch" style="background:#EF4444;width:3px;height:14px;"></span>Aujourd'hui</span>`;
+
+  // Filtrer produits ayant au moins une phase qui touche la fenêtre visible
+  function phaseInWindow(p) {
+    if (!p.PhasesTimeline) return false;
+    for (const ph of ROADMAP_PHASE_ORDER) {
+      const t = p.PhasesTimeline[ph];
+      if (!t) continue;
+      const s = t.start || t.startPlanned;
+      const e = t.end || t.endPlanned;
+      if (!s && !e) continue;
+      const sMs = s ? new Date(s).getTime() : -Infinity;
+      const eMs = e ? new Date(e).getTime() : Infinity;
+      // Intersection avec [winStart, winEnd]
+      if (eMs >= winStartMs && sMs <= winEndMs) return true;
+    }
+    return false;
+  }
+  const visibleProducts = filtered.filter(phaseInWindow);
+
+  // Tri : par phase actuelle (ordre pipeline), puis nom produit
+  const phaseRank = ph => ROADMAP_PHASE_ORDER.indexOf(ph || '') + 1 || 999;
+  visibleProducts.sort((a, b) =>
+    phaseRank(a.Phase) - phaseRank(b.Phase) ||
+    (a.Produit || '').localeCompare(b.Produit || '')
+  );
+
+  // Rendu body
+  const body = document.getElementById('gantt-body');
+  if (visibleProducts.length === 0) {
+    body.innerHTML = '<div class="gantt-empty">Aucun produit avec des dates de phase dans cette période.<br>Vérifie que tu as bien lancé <code>fetch_pvms.py</code> puis <code>merge.py</code>.</div>';
+    return;
+  }
+
+  // Helper position et largeur en %
+  function pct(dateMs) {
+    const clamped = Math.max(winStartMs, Math.min(winEndMs, dateMs));
+    return ((clamped - winStartMs) / winDurationMs) * 100;
+  }
+
+  // Ligne Today
+  const todayMs = new Date().setHours(0,0,0,0);
+  const showTodayLine = todayMs >= winStartMs && todayMs <= winEndMs;
+  const todayPct = showTodayLine ? pct(todayMs) : null;
+
+  body.innerHTML = visibleProducts.map(p => {
+    const bars = [];
+    const todayIso = new Date().toISOString().slice(0,10);
+    for (const ph of ROADMAP_PHASE_ORDER) {
+      const t = p.PhasesTimeline[ph];
+      if (!t) continue;
+
+      const sReal = t.start;
+      const eReal = t.end;
+      const sPlanned = t.startPlanned;
+      const ePlanned = t.endPlanned;
+
+      // Règle d'affichage :
+      // 1) Si start réel → afficher (réel)
+      // 2) Sinon si startPlanned ET startPlanned >= today → afficher (planifié)
+      // 3) Sinon → ne pas afficher (donnée obsolète ou phase pas commencée et sans estimation utile)
+      let s, e, isPlanned;
+      if (sReal) {
+        s = sReal;
+        e = eReal;
+        isPlanned = false;
+      } else if (sPlanned && sPlanned >= todayIso) {
+        s = sPlanned;
+        e = ePlanned;
+        isPlanned = true;
+      } else {
+        continue;
+      }
+
+      const sMs = new Date(s).getTime();
+      // Si pas d'end : étendre jusqu'à TODAY (si on est dans une phase réelle en cours)
+      // ou jusqu'à fin de fenêtre (si phase planifiée future sans estimation de fin)
+      let eMs;
+      let noEndTruncated = false;
+      if (e) {
+        eMs = new Date(e).getTime();
+      } else {
+        eMs = isPlanned ? winEndMs : Math.max(sMs, new Date(todayIso).getTime());
+        noEndTruncated = true;
+      }
+      // Hors fenêtre
+      if (eMs < winStartMs || sMs > winEndMs) continue;
+
+      const left = pct(sMs);
+      const right = pct(eMs);
+      const width = Math.max(1.5, right - left);
+      const color = ROADMAP_PHASE_COLORS[ph];
+      const fmtFr = d => d ? d.split('-').reverse().join('/') : '—';
+      const tooltipParts = [
+        `${ph}`,
+        `Début : ${fmtFr(s)}${isPlanned ? ' (planifié)' : ''}`,
+        e ? `Fin   : ${fmtFr(e)}${isPlanned ? ' (planifié)' : ''}` : `Fin   : ${isPlanned ? 'non estimée' : 'en cours'}`,
+      ];
+
+      bars.push(`<div class="gantt-bar ${isPlanned ? 'planned' : ''} ${noEndTruncated ? 'no-end-truncated' : ''}"
+                       style="left: ${left}%; width: ${width}%; background: ${color}; color: ${color};"
+                       title="${tooltipParts.join('\n')}">
+        <span style="color: white; position: relative; z-index: 1;">${ph}</span>
+      </div>`);
+    }
+
+    return `<div class="gantt-row">
+      <div class="gantt-label">
+        <div class="gantt-label-product">${p.Produit}</div>
+        <div class="gantt-label-current">Phase : ${p.Phase || '—'}</div>
+      </div>
+      <div class="gantt-track">
+        ${bars.join('')}
+        ${todayPct !== null ? `<div class="gantt-today-line" style="left: ${todayPct}%;"></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// === Onglet PVM ===
+const pvmFilters = { pvm: [], branche: [], phase: [] };
+const pvmMS = {};
+let pvmFiltersInited = false;
+
+// Couleur d'avatar déterministe à partir du nom
+function avatarColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+  return `hsl(${h}, 65%, 45%)`;
+}
+function initials(name) {
+  return (name || '').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
+const PVM_PHASE_COLORS = {
+  'PRE-FRAMING':       '#7C3AED',
+  'FRAMING':           '#0072CE',
+  'BUILD 1ST DEPLOY':  '#00BFD6',
+  'GROWTH':            '#00B894',
+  'MAINTAIN':          '#3D52E0',
+  'DISCARDED':         '#9CA3AF',
+  'DECOMMISSIONED':    '#E63946',
+  'SANDBOX':           '#F59E0B',
+};
+const PVM_PHASE_ORDER = ['PRE-FRAMING','FRAMING','BUILD 1ST DEPLOY','GROWTH','MAINTAIN','DISCARDED','DECOMMISSIONED','SANDBOX'];
+
+function renderPVM() {
+  const items = PORTFOLIO_PHASES || [];
+  const ctData = RAW_DATA || [];
+  const today = new Date().toISOString().slice(0,10);
+
+  // Init filters (1 fois)
+  if (!pvmFiltersInited) {
+    // Options PVM = liste dédupliquée des PVMs individuels (après split sur virgule)
+    const allPVMs = [...new Set(items.flatMap(p =>
+      (p.PVM || '').split(',').map(s => s.trim()).filter(s => s)
+    ))].sort();
+    pvmMS.pvm = setupMultiSelect('filter-pvm-pvm', allPVMs,
+      'Tous', v => { pvmFilters.pvm = v; renderPVM(); });
+    pvmMS.branche = setupMultiSelect('filter-pvm-branche',
+      [...new Set(items.map(p => p.Branche).filter(v => v))].sort(),
+      'Toutes', v => { pvmFilters.branche = v; renderPVM(); });
+    pvmMS.phase = setupMultiSelect('filter-pvm-phase',
+      [...new Set(items.map(p => p.Phase).filter(v => v))].sort(),
+      'Toutes', v => { pvmFilters.phase = v; renderPVM(); });
+
+    document.getElementById('reset-pvm-btn').addEventListener('click', () => {
+      pvmFilters.pvm = []; pvmFilters.branche = []; pvmFilters.phase = [];
+      Object.values(pvmMS).forEach(ms => ms && ms.reset());
+      renderPVM();
+    });
+    pvmFiltersInited = true;
+  }
+
+  // Appliquer les filtres : un produit avec plusieurs PVMs matche si au moins un est dans le filtre
+  const filtered = items.filter(p => {
+    const pvms = pvmListFor(p.Produit);
+    if (pvms.length === 0) return false; // on ne garde QUE les produits avec PVM
+    if (pvmFilters.pvm.length && !pvms.some(v => pvmFilters.pvm.includes(v))) return false;
+    if (pvmFilters.branche.length && !pvmFilters.branche.includes(p.Branche)) return false;
+    if (pvmFilters.phase.length && !pvmFilters.phase.includes(p.Phase)) return false;
+    return true;
+  });
+
+  // Grouper par PVM individuel (un produit avec 2 PVMs apparaît dans 2 buckets)
+  const byPVM = {};
+  filtered.forEach(p => {
+    const pvms = pvmListFor(p.Produit);
+    pvms.forEach(pvmName => {
+      // Si filtre PVM actif, on n'affiche que les cartes des PVMs sélectionnés
+      if (pvmFilters.pvm.length && !pvmFilters.pvm.includes(pvmName)) return;
+      if (!byPVM[pvmName]) byPVM[pvmName] = {
+        products: [], phases: {}, programs: new Set(),
+        cts2026Held: 0, cts2026Cancelled: 0, ctsUpcoming: 0,
+        decisions2026: { framing: 0, build: 0, growth: 0, maintain: 0, transfer: 0 },
+        nextCt: null,
+      };
+      const data = byPVM[pvmName];
+      data.products.push(p);
+      const ph = p.Phase || '—';
+      data.phases[ph] = (data.phases[ph] || 0) + 1;
+      if (p.Programme) data.programs.add(p.Programme);
+    });
+  });
+
+  // Activité 2026 par PVM (depuis RAW_DATA = CTs)
+  ctData.forEach(ct => {
+    const pvms = pvmListFor(ct.Produit);
+    if (!pvms.length) return;
+    pvms.forEach(pvm => {
+      if (!byPVM[pvm]) return;
+      const d = byPVM[pvm];
+
+      const date = ct.Date || '';
+      const is2026 = date.startsWith('2026');
+      const status = ct['Statut Agenda'];
+
+      if (is2026 && status === 'Confirmed' && date <= today) d.cts2026Held++;
+      if (is2026 && status === 'Cancelled') d.cts2026Cancelled++;
+      if (date > today && (status === 'Confirmed' || status === 'To be confirmed')) {
+        d.ctsUpcoming++;
+        if (!d.nextCt || date < d.nextCt.Date) d.nextCt = ct;
+      }
+
+      // Décisions clés (dans le commentaire)
+      if (is2026 && date <= today && status === 'Confirmed') {
+        const c = (ct.Commentaire || '').toLowerCase();
+        if (c.includes('go for framing'))  d.decisions2026.framing++;
+        if (c.includes('go for build'))    d.decisions2026.build++;
+        if (c.includes('go for growth'))   d.decisions2026.growth++;
+        if (c.includes('go for maintain')) d.decisions2026.maintain++;
+        if (c.includes('go for transfer')) d.decisions2026.transfer++;
+      }
+    });
+  });
+
+  // === Grille des cartes ===
+  const totalPVMs = Object.keys(byPVM).length;
+  const grid = document.getElementById('pvm-grid');
+  if (totalPVMs === 0) {
+    grid.innerHTML = '<div class="pvm-empty">Aucun PVM ne correspond à ces filtres</div>';
+    return;
+  }
+
+  // Tri par nombre de produits décroissant
+  const sortedPVMs = Object.entries(byPVM).sort((a, b) => b[1].products.length - a[1].products.length);
+
+  grid.innerHTML = sortedPVMs.map(([pvmName, d]) => {
+    const color = avatarColor(pvmName);
+
+    // Pipeline phases
+    const phasePills = PVM_PHASE_ORDER
+      .filter(ph => d.phases[ph])
+      .map(ph => `<span class="pvm-phase-pill" style="background: ${PVM_PHASE_COLORS[ph]};">
+        ${ph} · ${d.phases[ph]}
+      </span>`).join('');
+
+    // Décisions 2026
+    const decisions = [];
+    if (d.decisions2026.framing)  decisions.push(`<span class="pvm-decision-pill" style="background: #10B981;">${d.decisions2026.framing} Go framing</span>`);
+    if (d.decisions2026.build)    decisions.push(`<span class="pvm-decision-pill" style="background: #F59E0B;">${d.decisions2026.build} Go build</span>`);
+    if (d.decisions2026.growth)   decisions.push(`<span class="pvm-decision-pill" style="background: #0072CE;">${d.decisions2026.growth} Go growth</span>`);
+    if (d.decisions2026.maintain) decisions.push(`<span class="pvm-decision-pill" style="background: #3D52E0;">${d.decisions2026.maintain} Go maintain</span>`);
+    if (d.decisions2026.transfer) decisions.push(`<span class="pvm-decision-pill" style="background: #7C3AED;">${d.decisions2026.transfer} Go transfer</span>`);
+
+    // Liste des produits (chips)
+    const productChips = d.products
+      .sort((a, b) => (a.Produit || '').localeCompare(b.Produit || ''))
+      .map(p => `<span class="pvm-product-chip" title="${p.Phase || ''}">${p.Produit}</span>`)
+      .join('');
+
+    return `
+      <div class="pvm-card">
+        <div class="pvm-card-header">
+          <div class="pvm-avatar" style="background: ${color};">${initials(pvmName)}</div>
+          <div style="flex: 1;">
+            <div class="pvm-name">${pvmName}</div>
+            <div class="pvm-programs">${[...d.programs].join(' · ') || '—'}</div>
+          </div>
+        </div>
+
+        <div class="pvm-big-stat">
+          <div class="pvm-big-stat-value">${d.products.length}</div>
+          <div class="pvm-big-stat-label">Produit${d.products.length > 1 ? 's' : ''} encadré${d.products.length > 1 ? 's' : ''}</div>
+        </div>
+
+        <div class="pvm-section">
+          <div class="pvm-section-title">Pipeline</div>
+          <div class="pvm-phases">${phasePills || '<span style="color:#9CA3AF;font-size:12px;">—</span>'}</div>
+        </div>
+
+        <div class="pvm-section">
+          <div class="pvm-section-title">Activité 2026</div>
+          <div class="pvm-stats-row">
+            <div class="pvm-stat-mini">
+              <div class="pvm-stat-mini-value">${d.cts2026Held}</div>
+              <div class="pvm-stat-mini-label">CTs tenues</div>
+            </div>
+            <div class="pvm-stat-mini">
+              <div class="pvm-stat-mini-value">${d.ctsUpcoming}</div>
+              <div class="pvm-stat-mini-label">À venir</div>
+            </div>
+            <div class="pvm-stat-mini">
+              <div class="pvm-stat-mini-value" style="color: ${d.cts2026Cancelled > 0 ? '#E63946' : 'var(--text)'};">${d.cts2026Cancelled}</div>
+              <div class="pvm-stat-mini-label">Annulées</div>
+            </div>
+          </div>
+        </div>
+
+        ${decisions.length ? `
+        <div class="pvm-section">
+          <div class="pvm-section-title">Décisions clés 2026</div>
+          <div class="pvm-decisions">${decisions.join('')}</div>
+        </div>` : ''}
+
+        <div class="pvm-section">
+          <div class="pvm-section-title">Produits</div>
+          <div class="pvm-products-list">${productChips}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// === Onglet Portfolio ===
+const portfolioFilters = { branche: [], phase: [], domain: [], programme: [], pvm: [] };
+const portfolioMS = {};
+let portfolioFiltersInited = false;
+
+function applyPortfolioFilters(items) {
+  return items.filter(p =>
+       (portfolioFilters.branche.length === 0   || portfolioFilters.branche.includes(p.Branche))
+    && (portfolioFilters.phase.length === 0     || portfolioFilters.phase.includes(p.Phase))
+    && (portfolioFilters.domain.length === 0    || portfolioFilters.domain.includes(p.Domain))
+    && (portfolioFilters.programme.length === 0 || portfolioFilters.programme.includes(p.Programme))
+    && (portfolioFilters.pvm.length === 0       || pvmListFor(p.Produit).some(v => portfolioFilters.pvm.includes(v)))
+  );
+}
+
+function fmtIso(s) {
+  if (!s) return '—';
+  return s.split('-').reverse().join('/');
+}
+
+function renderPortfolio() {
+  const items = PORTFOLIO_PHASES || [];
+  if (!items.length) {
+    document.getElementById('portfolio-body').innerHTML =
+      '<tr><td colspan="8" class="empty-state">Aucun produit dans le portfolio (vérifie portfolio_phases.json)</td></tr>';
+    return;
+  }
+
+  // Init multi-selects (1 fois)
+  if (!portfolioFiltersInited) {
+    portfolioMS.branche = setupMultiSelect('filter-pf-branche',
+      [...new Set(items.map(p => p.Branche).filter(v => v))].sort(),
+      'Toutes', v => { portfolioFilters.branche = v; renderPortfolio(); });
+    portfolioMS.phase = setupMultiSelect('filter-pf-phase',
+      [...new Set(items.map(p => p.Phase).filter(v => v))].sort(),
+      'Toutes', v => { portfolioFilters.phase = v; renderPortfolio(); });
+    portfolioMS.domain = setupMultiSelect('filter-pf-domain',
+      [...new Set(items.map(p => p.Domain).filter(v => v))].sort(),
+      'Tous', v => { portfolioFilters.domain = v; renderPortfolio(); });
+    portfolioMS.programme = setupMultiSelect('filter-pf-programme',
+      [...new Set(items.map(p => p.Programme).filter(v => v))].sort(),
+      'Tous', v => { portfolioFilters.programme = v; renderPortfolio(); });
+    portfolioMS.pvm = setupMultiSelect('filter-pf-pvm',
+      [...new Set(items.flatMap(p => (p.PVM || '').split(',').map(s => s.trim()).filter(s => s)))].sort(),
+      'Tous', v => { portfolioFilters.pvm = v; renderPortfolio(); });
+
+    document.getElementById('reset-pf-btn').addEventListener('click', () => {
+      portfolioFilters.branche = [];
+      portfolioFilters.phase = [];
+      portfolioFilters.domain = [];
+      portfolioFilters.programme = [];
+      portfolioFilters.pvm = [];
+      Object.values(portfolioMS).forEach(ms => ms && ms.reset());
+      renderPortfolio();
+    });
+    portfolioFiltersInited = true;
+  }
+
+  const filtered = applyPortfolioFilters(items);
+
+  // Stats par phase
+  const phaseCounts = {};
+  filtered.forEach(p => {
+    const ph = p.Phase || '—';
+    phaseCounts[ph] = (phaseCounts[ph] || 0) + 1;
+  });
+
+  const phaseColors = {
+    'PRE-FRAMING':       '#7C3AED',
+    'FRAMING':           '#0072CE',
+    'BUILD 1ST DEPLOY':  '#00BFD6',
+    'GROWTH':            '#00B894',
+    'MAINTAIN':          '#3D52E0',
+    'DISCARDED':         '#9CA3AF',
+    'DECOMMISSIONED':    '#E63946',
+    'SANDBOX':           '#F59E0B',
+  };
+
+  // Ligne 1 : Total + phases actives (ordre fixe)
+  const phasesActive = ['PRE-FRAMING', 'FRAMING', 'BUILD 1ST DEPLOY', 'GROWTH', 'MAINTAIN'];
+  const phasesEnd    = ['DISCARDED', 'DECOMMISSIONED', 'SANDBOX'];
+
+  function statCard(label, count, color) {
+    return `<div class="portfolio-stat" style="--accent: ${color};">
+      <div class="portfolio-stat-value">${count}</div>
+      <div class="portfolio-stat-label">${label}</div>
+    </div>`;
+  }
+
+  document.getElementById('portfolio-summary').innerHTML = [
+    statCard('Total', filtered.length, '#0072CE'),
+    ...phasesActive.map(ph => statCard(ph, phaseCounts[ph] || 0, phaseColors[ph]))
+  ].join('');
+
+  document.getElementById('portfolio-summary-end').innerHTML =
+    phasesEnd.map(ph => statCard(ph, phaseCounts[ph] || 0, phaseColors[ph])).join('');
+
+  // Table
+  const sorted = [...filtered].sort((a, b) => (a.Produit || '').localeCompare(b.Produit || ''));
+  document.getElementById('portfolio-count').textContent =
+    `${sorted.length} produit${sorted.length > 1 ? 's' : ''}`;
+
+  const body = document.getElementById('portfolio-body');
+  if (!sorted.length) {
+    body.innerHTML = '<tr><td colspan="8" class="empty-state">Aucun produit avec ces filtres</td></tr>';
+    return;
+  }
+
+  body.innerHTML = sorted.map(p => {
+    const phaseClass = PHASE_BADGE[p.Phase] || 'badge-discarded';
+    const brancheColor = BRANCHE_COLORS[p.Branche] || BRANCHE_COLORS['Sans branche'];
+    return `<tr>
+      <td><strong>${p.Produit || '—'}</strong></td>
+      <td><span style="background: ${brancheColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${p.Branche || '—'}</span></td>
+      <td><span class="badge ${phaseClass}">${p.Phase || '—'}</span></td>
+      <td>${p.Programme || '<span style="color:#9CA3AF;">—</span>'}</td>
+      <td>${p['Value Stream'] || '—'}</td>
+      <td>${p.Domain || '—'}</td>
+      <td>${p.PVM || '<span style="color:#9CA3AF;">—</span>'}</td>
+      <td>${p['Product Owners'] || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// (Listeners portfolio gérés via setupMultiSelect dans renderPortfolio)
+
+// Export Excel pour le portfolio
+document.getElementById('export-portfolio-btn').addEventListener('click', () => {
+  const filtered = applyPortfolioFilters(PORTFOLIO_PHASES || []);
+  if (!filtered.length) return;
+  const sorted = [...filtered].sort((a, b) => (a.Produit || '').localeCompare(b.Produit || ''));
+  const ws = XLSX.utils.json_to_sheet(sorted.map(p => ({
+    'Produit': p.Produit,
+    'Branche': p.Branche,
+    'Phase': p.Phase,
+    'Programme': p.Programme,
+    'PVM': p.PVM,
+    'Value Stream': p['Value Stream'],
+    'Domain': p.Domain,
+    'Discipline': p.Discipline,
+    'Product Owners': p['Product Owners'],
+    'Fin Pre-Framing': p['Pre-Framing End Date'],
+    'Fin Framing':     p['Framing End Date'],
+  })));
+  ws['!cols'] = [{wch:35},{wch:10},{wch:18},{wch:30},{wch:22},{wch:22},{wch:18},{wch:22},{wch:28},{wch:14},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Portfolio TDF');
+  const ts = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `portfolio-tdf-${ts}.xlsx`);
+});
+
+// ====================== SMART SEARCH ======================
+const PHASE_KEYWORDS = {
+  'pre-framing': 'PRE-FRAMING', 'pre framing': 'PRE-FRAMING', 'preframing': 'PRE-FRAMING',
+  'framing': 'FRAMING',
+  'build 1st deploy': 'BUILD 1ST DEPLOY', 'build': 'BUILD 1ST DEPLOY', '1st deploy': 'BUILD 1ST DEPLOY',
+  'growth': 'GROWTH', 'maintain': 'MAINTAIN',
+  'discarded': 'DISCARDED', 'decommissioned': 'DECOMMISSIONED', 'sandbox': 'SANDBOX',
+};
+const TAB_KEYWORDS = {
+  'cts': 'cts', 'suivi des cts': 'cts', 'suivi': 'cts', 'control tower': 'cts',
+  'portfolio': 'portfolio', 'portefeuille': 'portfolio', 'tdf portfolio': 'portfolio',
+  'pvm': 'pvm',
+  'roadmap': 'roadmap', 'gantt': 'roadmap',
+};
+
+function searchAllProducts() {
+  return PORTFOLIO_PHASES || [];
+}
+function searchAllPVMs() {
+  const s = new Set();
+  (PORTFOLIO_PHASES || []).forEach(p => {
+    (p.PVM || '').split(',').forEach(n => { const t = n.trim(); if (t) s.add(t); });
+  });
+  return [...s];
+}
+function searchAllBranches() {
+  return [...new Set((PORTFOLIO_PHASES || []).map(p => p.Branche).filter(v => v))];
+}
+function searchAllProgrammes() {
+  return [...new Set((PORTFOLIO_PHASES || []).map(p => p.Programme).filter(v => v))];
+}
+
+function findProduct(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) return null;
+  const products = searchAllProducts();
+  // Exact d'abord
+  let m = products.find(p => (p.Produit || '').toLowerCase() === q);
+  if (m) return m;
+  // Préfixe
+  m = products.find(p => (p.Produit || '').toLowerCase().startsWith(q));
+  if (m) return m;
+  // Substring
+  return products.find(p => (p.Produit || '').toLowerCase().includes(q));
+}
+function findPVM(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) return null;
+  return searchAllPVMs().find(name => name.toLowerCase().includes(q));
+}
+
+function parseSearchQuery(rawQuery) {
+  const q = rawQuery.toLowerCase().trim();
+  if (!q) return null;
+
+  // Help / Reset / Tabs
+  if (q === 'help' || q === 'aide' || q === '?') return { type: 'help' };
+  if (/^(reset|réinit|tout afficher|clear|effacer)$/i.test(q)) return { type: 'reset' };
+
+  for (const [kw, tab] of Object.entries(TAB_KEYWORDS)) {
+    if (q === kw || q === `onglet ${kw}` || q === `va sur ${kw}` || q === `aller sur ${kw}`) {
+      return { type: 'goto', tab };
+    }
+  }
+
+  // PVM lookup : "PVM de [produit]" / "qui est le PVM de X"
+  let m = q.match(/^(?:pvm (?:de|du|d'un? produit)|qui est le pvm de|quel est le pvm de)\s+(.+)$/);
+  if (m) {
+    const prod = findProduct(m[1]);
+    if (prod) return { type: 'pvm_lookup', product: prod };
+  }
+  m = q.match(/^(.+?)\s+pvm$/);
+  if (m) {
+    const prod = findProduct(m[1]);
+    if (prod) return { type: 'pvm_lookup', product: prod };
+  }
+
+  // "combien de produits en [phase]" / "combien en [branche]"
+  m = q.match(/^combien\s+(?:de\s+produits?\s+)?(?:en|de la phase)\s+(.+)$/);
+  if (m) {
+    const sub = m[1].trim();
+    for (const [kw, phase] of Object.entries(PHASE_KEYWORDS)) {
+      if (sub === kw || sub.startsWith(kw)) return { type: 'count_phase', phase };
+    }
+    for (const br of searchAllBranches()) {
+      if (sub === br.toLowerCase()) return { type: 'count_branche', branche: br };
+    }
+  }
+
+  // Prochaine CT (avec branche optionnelle)
+  m = q.match(/^(?:prochaine?|next)\s+ct(?:\s+(.+))?$/);
+  if (m) {
+    let branche = null;
+    if (m[1]) {
+      const sub = m[1].trim().toUpperCase();
+      const br = searchAllBranches().find(b => b.toUpperCase() === sub);
+      if (br) branche = br;
+    }
+    return { type: 'next_ct', branche };
+  }
+
+  // "produits en [phase]" / "phase [phase]"
+  for (const [kw, phase] of Object.entries(PHASE_KEYWORDS)) {
+    const re = new RegExp(`^(?:produits?\\s+)?(?:en\\s+|de\\s+la\\s+phase\\s+|phase\\s+)?${kw}$`, 'i');
+    if (re.test(q)) return { type: 'filter_phase', phase };
+  }
+
+  // "produits de [PVM]" / "PVM [nom]"
+  m = q.match(/^(?:produits?\s+(?:de|suivis?\s+par)|pvm)\s+(.+)$/);
+  if (m) {
+    const pvm = findPVM(m[1]);
+    if (pvm) return { type: 'filter_pvm', pvm };
+  }
+
+  // Filter par branche directe : "EP", "branche EP", "produits EP"
+  m = q.match(/^(?:branche\s+|produits?\s+)?([a-z0-9&]+)$/i);
+  if (m) {
+    const sub = m[1].toUpperCase();
+    const br = searchAllBranches().find(b => b.toUpperCase() === sub);
+    if (br) return { type: 'filter_branche', branche: br };
+  }
+
+  // Programme
+  for (const prog of searchAllProgrammes()) {
+    if (q === prog.toLowerCase() || q === `programme ${prog.toLowerCase()}`) {
+      return { type: 'filter_programme', programme: prog };
+    }
+  }
+
+  // Recherche directe par PVM
+  const pvm = findPVM(q);
+  if (pvm) return { type: 'filter_pvm', pvm };
+
+  // Recherche par produit (fuzzy)
+  const prod = findProduct(q);
+  if (prod) return { type: 'product_info', product: prod };
+
+  return null;
+}
+
+function showAnswerCard({ title, value, action, onAction }) {
+  const area = document.getElementById('search-answer-area');
+  area.innerHTML = `
+    <div class="search-answer-card">
+      <div class="search-answer-icon">★</div>
+      <div class="search-answer-text">
+        <div class="search-answer-title">${title}</div>
+        <div class="search-answer-value">${value}</div>
+      </div>
+      ${action ? `<button class="search-answer-action" id="search-answer-action-btn">${action}</button>` : ''}
+      <button class="search-answer-close" id="search-answer-close-btn" title="Fermer">×</button>
+    </div>`;
+  if (action && onAction) {
+    document.getElementById('search-answer-action-btn').addEventListener('click', onAction);
+  }
+  document.getElementById('search-answer-close-btn').addEventListener('click', () => area.innerHTML = '');
+}
+function showDismissCard(msg) {
+  const area = document.getElementById('search-answer-area');
+  area.innerHTML = `
+    <div class="search-answer-card dismiss">
+      <div class="search-answer-icon" style="background:#F59E0B;">?</div>
+      <div class="search-answer-text">
+        <div class="search-answer-title">Recherche</div>
+        <div class="search-answer-value" style="font-size:14px;">${msg}</div>
+      </div>
+      <button class="search-answer-close" onclick="document.getElementById('search-answer-area').innerHTML=''">×</button>
+    </div>`;
+}
+
+function gotoTab(tab) {
+  const btn = document.querySelector(`.tab-button[data-tab="${tab}"]`);
+  if (btn) btn.click();
+}
+
+function executeIntent(intent) {
+  if (!intent) return;
+  switch (intent.type) {
+    case 'help':
+      showAnswerCard({
+        title: 'Smart Search · Exemples',
+        value: '"PVM de MasterMaint" · "produits en framing" · "prochaine CT EP" · "combien en growth" · "Yann Poles" · "roadmap"',
+      });
+      break;
+    case 'reset':
+      activeFilters = { branche: [], phase: [], vs: [], domain: [], owner: [], status: [] };
+      Object.values(filterMSInstances).forEach(ms => ms && ms.reset());
+      render();
+      showAnswerCard({ title: 'Filtres réinitialisés', value: 'Toutes les CTs sont affichées' });
+      break;
+    case 'goto':
+      gotoTab(intent.tab);
+      break;
+    case 'pvm_lookup': {
+      const p = intent.product;
+      const pvm = p.PVM || 'Aucun PVM identifié';
+      showAnswerCard({
+        title: `PVM de ${p.Produit}`,
+        value: pvm,
+        action: p.PVM ? 'Voir tous ses produits' : null,
+        onAction: p.PVM ? () => {
+          gotoTab('pvm');
+          setTimeout(() => {
+            const firstPvm = p.PVM.split(',')[0].trim();
+            if (portfolioMS.pvm) {} // pas portfolio, mais le filter pvm de l'onglet PVM
+            const ms = pvmMS && pvmMS.pvm;
+            if (ms) { ms.setValues([firstPvm]); pvmFilters.pvm = [firstPvm]; renderPVM(); }
+          }, 100);
+        } : null,
+      });
+      break;
+    }
+    case 'count_phase': {
+      const n = (PORTFOLIO_PHASES || []).filter(p => p.Phase === intent.phase).length;
+      showAnswerCard({
+        title: `Produits en phase ${intent.phase}`,
+        value: `${n} produit${n > 1 ? 's' : ''}`,
+        action: 'Voir la liste',
+        onAction: () => {
+          gotoTab('portfolio');
+          setTimeout(() => {
+            if (portfolioMS.phase) { portfolioMS.phase.setValues([intent.phase]); portfolioFilters.phase = [intent.phase]; renderPortfolio(); }
+          }, 100);
+        },
+      });
+      break;
+    }
+    case 'count_branche': {
+      const n = (PORTFOLIO_PHASES || []).filter(p => p.Branche === intent.branche).length;
+      showAnswerCard({
+        title: `Produits de la branche ${intent.branche}`,
+        value: `${n} produit${n > 1 ? 's' : ''}`,
+        action: 'Voir la liste',
+        onAction: () => {
+          gotoTab('portfolio');
+          setTimeout(() => {
+            if (portfolioMS.branche) { portfolioMS.branche.setValues([intent.branche]); portfolioFilters.branche = [intent.branche]; renderPortfolio(); }
+          }, 100);
+        },
+      });
+      break;
+    }
+    case 'next_ct': {
+      const today = new Date().toISOString().slice(0,10);
+      const upcoming = (RAW_DATA || []).filter(r =>
+        r.Date > today
+        && (r['Statut Agenda'] === 'Confirmed' || r['Statut Agenda'] === 'To be confirmed')
+        && (!intent.branche || r.Branche === intent.branche)
+      ).sort((a, b) => a.Date.localeCompare(b.Date));
+      if (upcoming.length === 0) {
+        showDismissCard(`Aucune CT à venir${intent.branche ? ' pour ' + intent.branche : ''}`);
+      } else {
+        const next = upcoming[0];
+        showAnswerCard({
+          title: `Prochaine CT${intent.branche ? ' ' + intent.branche : ''}`,
+          value: `${fmtDate(next.Date)} · ${next.Produit} (${next.Branche})`,
+          action: 'Voir le détail',
+          onAction: () => {
+            gotoTab('cts');
+            setTimeout(() => {
+              const tableEl = document.querySelector('#upcoming-body');
+              if (tableEl) tableEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          },
+        });
+      }
+      break;
+    }
+    case 'filter_phase':
+      gotoTab('portfolio');
+      setTimeout(() => {
+        if (portfolioMS.phase) { portfolioMS.phase.setValues([intent.phase]); portfolioFilters.phase = [intent.phase]; renderPortfolio(); }
+      }, 100);
+      showAnswerCard({
+        title: 'Filtre appliqué dans Portfolio',
+        value: `Phase = ${intent.phase}`,
+      });
+      break;
+    case 'filter_branche':
+      gotoTab('portfolio');
+      setTimeout(() => {
+        if (portfolioMS.branche) { portfolioMS.branche.setValues([intent.branche]); portfolioFilters.branche = [intent.branche]; renderPortfolio(); }
+      }, 100);
+      showAnswerCard({
+        title: 'Filtre appliqué dans Portfolio',
+        value: `Branche = ${intent.branche}`,
+      });
+      break;
+    case 'filter_programme':
+      gotoTab('portfolio');
+      setTimeout(() => {
+        if (portfolioMS.programme) { portfolioMS.programme.setValues([intent.programme]); portfolioFilters.programme = [intent.programme]; renderPortfolio(); }
+      }, 100);
+      showAnswerCard({
+        title: 'Filtre appliqué dans Portfolio',
+        value: `Programme = ${intent.programme}`,
+      });
+      break;
+    case 'filter_pvm':
+      gotoTab('pvm');
+      setTimeout(() => {
+        if (pvmMS.pvm) { pvmMS.pvm.setValues([intent.pvm]); pvmFilters.pvm = [intent.pvm]; renderPVM(); }
+      }, 100);
+      showAnswerCard({
+        title: 'Filtre appliqué dans PVM',
+        value: `PVM = ${intent.pvm}`,
+      });
+      break;
+    case 'product_info': {
+      const p = intent.product;
+      gotoTab('portfolio');
+      showAnswerCard({
+        title: p.Produit,
+        value: `Phase: ${p.Phase || '—'} · Branche: ${p.Branche || '—'} · PVM: ${p.PVM || '—'}`,
+      });
+      break;
+    }
+  }
+}
+
+function renderSearchDropdown(query) {
+  const dropdown = document.getElementById('search-dropdown');
+  if (!query.trim()) {
+    // Suggestions par défaut
+    dropdown.innerHTML = `
+      <div class="search-section">
+        <div class="search-section-title">💡 Exemples</div>
+        ${[
+          { ex: 'PVM de MasterMaint', icon: '★' },
+          { ex: 'produits en framing', icon: '⏱' },
+          { ex: 'prochaine CT EP', icon: '📅' },
+          { ex: 'combien en growth', icon: '#' },
+          { ex: 'Yann Poles', icon: '👤' },
+          { ex: 'roadmap', icon: '🗺' },
+        ].map(s => `<div class="search-result" data-query="${s.ex}">
+          <div class="search-result-icon">${s.icon}</div>
+          <div class="search-result-text"><div class="search-result-title">${s.ex}</div></div>
+        </div>`).join('')}
+      </div>`;
+    dropdown.classList.add('open');
+    bindSearchResults();
+    return;
+  }
+  const q = query.toLowerCase();
+  // Produits, PVMs, Programmes correspondants
+  const products = searchAllProducts()
+    .filter(p => (p.Produit || '').toLowerCase().includes(q)).slice(0, 5);
+  const pvms = searchAllPVMs()
+    .filter(n => n.toLowerCase().includes(q)).slice(0, 4);
+  const programmes = searchAllProgrammes()
+    .filter(n => n.toLowerCase().includes(q)).slice(0, 3);
+
+  const sections = [];
+  if (products.length) {
+    sections.push(`<div class="search-section">
+      <div class="search-section-title">Produits (${products.length})</div>
+      ${products.map(p => `<div class="search-result" data-query="${p.Produit}">
+        <div class="search-result-icon">📦</div>
+        <div class="search-result-text">
+          <div class="search-result-title">${p.Produit}</div>
+          <div class="search-result-meta">${p.Branche || '—'} · ${p.Phase || '—'}${p.PVM ? ' · PVM: ' + p.PVM : ''}</div>
+        </div>
+      </div>`).join('')}
+    </div>`);
+  }
+  if (pvms.length) {
+    sections.push(`<div class="search-section">
+      <div class="search-section-title">PVMs (${pvms.length})</div>
+      ${pvms.map(n => `<div class="search-result" data-query="${n}">
+        <div class="search-result-icon">★</div>
+        <div class="search-result-text"><div class="search-result-title">${n}</div></div>
+      </div>`).join('')}
+    </div>`);
+  }
+  if (programmes.length) {
+    sections.push(`<div class="search-section">
+      <div class="search-section-title">Programmes (${programmes.length})</div>
+      ${programmes.map(n => `<div class="search-result" data-query="${n}">
+        <div class="search-result-icon">⬢</div>
+        <div class="search-result-text"><div class="search-result-title">${n}</div></div>
+      </div>`).join('')}
+    </div>`);
+  }
+  if (!sections.length) {
+    sections.push(`<div class="search-section">
+      <div class="search-result" style="cursor:default;">
+        <div class="search-result-icon">?</div>
+        <div class="search-result-text">
+          <div class="search-result-title">Aucune correspondance</div>
+          <div class="search-result-meta">Appuie sur Entrée pour interpréter "${query}" comme commande, ou demande à l'IA ci-dessous</div>
+        </div>
+      </div>
+    </div>`);
+  }
+
+  // CTA "Ask AI" toujours présent en bas si la question fait > 4 caractères
+  if (query.trim().length >= 4) {
+    sections.push(`<div class="ai-cta" data-ai-query="${escapeHtml(query)}">
+      <div class="ai-cta-icon">🤖</div>
+      <div class="ai-cta-text">
+        <div class="ai-cta-title">Demander à l'IA (Ollama local)</div>
+        <div class="ai-cta-meta">"${escapeHtml(query)}" · réponse générée localement, aucune donnée n'est envoyée à l'extérieur</div>
+      </div>
+    </div>`);
+  }
+  dropdown.innerHTML = sections.join('');
+  dropdown.classList.add('open');
+  bindSearchResults();
+}
+
+function bindSearchResults() {
+  document.querySelectorAll('#search-dropdown .search-result[data-query]').forEach(el => {
+    el.addEventListener('click', () => {
+      const q = el.dataset.query;
+      const input = document.getElementById('searchbar');
+      input.value = q;
+      handleSearchSubmit(q);
+    });
+  });
+  // CTA Ask AI
+  document.querySelectorAll('#search-dropdown .ai-cta[data-ai-query]').forEach(el => {
+    el.addEventListener('click', () => {
+      const q = el.dataset.aiQuery;
+      document.getElementById('search-dropdown').classList.remove('open');
+      openAiPanel(q);
+    });
+  });
+}
+
+function handleSearchSubmit(query) {
+  if (!query.trim()) return;
+  const intent = parseSearchQuery(query);
+  document.getElementById('search-dropdown').classList.remove('open');
+  if (!intent) {
+    // Fallback : demander à l'IA Ollama
+    openAiPanel(query);
+    return;
+  }
+  executeIntent(intent);
+}
+
+// ============================================================
+// === Ollama integration (Ask AI) ============================
+// ============================================================
+const OLLAMA = {
+  baseUrl: 'http://localhost:11434',
+  model: 'llama3.2',
+  systemPrompt: `Tu es un assistant spécialisé dans l'analyse du portefeuille TDF (TotalEnergies Digital Factory).
+Tu reçois en contexte :
+- Une liste de produits du portefeuille TDF avec leur phase, branche, programme, PVM, dates de phase
+- Une liste d'événements de Control Towers (CTs) prévus ou passés en 2026
+Tu réponds en français, de façon concise et factuelle.
+Tu donnes des chiffres précis quand c'est possible.
+Si la question n'a pas de réponse dans les données fournies, tu le dis clairement.
+Format : phrases courtes, listes à puces si pertinent. N'invente jamais d'information.`,
+  ctrl: null,  // AbortController de la requête en cours
+};
+
+// Préparer un contexte compact (pour éviter de saturer la fenêtre de contexte du modèle)
+function buildContextForAI() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Portfolio : on garde les champs utiles, format compact
+  const portfolio = (PORTFOLIO_PHASES || []).map(p => ({
+    produit: p.Produit, branche: p.Branche, phase: p.Phase,
+    domain: p.Domain, programme: p.Programme, pvm: p.PVM,
+    productOwners: p['Product Owners'],
+  }));
+
+  // CTs : seulement 2026 (Confirmed + To be confirmed + Cancelled)
+  const cts2026 = (RAW_DATA || [])
+    .filter(r => (r.Date || '').startsWith('2026'))
+    .map(r => ({
+      date: r.Date, branche: r.Branche, produit: r.Produit, phase: r.Phase,
+      statut: r['Statut Agenda'], commentaire: r.Commentaire || '',
+      onTime: r['Current Phase Status'],
+    }));
+
+  return { today, portfolioCount: portfolio.length, portfolio, cts2026 };
+}
+
+async function checkOllamaStatus() {
+  try {
+    const r = await fetch(`${OLLAMA.baseUrl}/api/tags`, { method: 'GET' });
+    if (!r.ok) return { online: false };
+    const data = await r.json();
+    const models = (data.models || []).map(m => m.name);
+    return { online: true, models };
+  } catch (e) {
+    return { online: false, error: e.message };
+  }
+}
+
+function openAiPanel(question) {
+  const area = document.getElementById('search-answer-area');
+  area.innerHTML = `
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-panel-header">
+        <div class="ai-panel-icon">🤖</div>
+        <div class="ai-panel-title">Ask AI · Ollama (local)</div>
+        <div class="ai-panel-status" id="ai-status">
+          <span class="dot"></span><span id="ai-status-text">connexion…</span>
+        </div>
+      </div>
+      <div class="ai-panel-question"><strong>Question :</strong> ${escapeHtml(question)}</div>
+      <div class="ai-panel-response empty" id="ai-response">En attente d'une réponse…</div>
+      <div class="ai-panel-actions">
+        <button class="ai-panel-action-btn" id="ai-stop-btn" style="display:none;">⏹ Arrêter</button>
+        <button class="ai-panel-action-btn" id="ai-retry-btn" style="display:none;">↻ Relancer</button>
+        <button class="ai-panel-action-btn" id="ai-close-btn">Fermer</button>
+        <div class="ai-panel-meta" id="ai-meta"></div>
+      </div>
+    </div>`;
+
+  document.getElementById('ai-close-btn').addEventListener('click', () => area.innerHTML = '');
+  document.getElementById('ai-stop-btn').addEventListener('click', () => {
+    if (OLLAMA.ctrl) OLLAMA.ctrl.abort();
+  });
+  document.getElementById('ai-retry-btn').addEventListener('click', () => askOllama(question));
+
+  askOllama(question);
+}
+
+function setAiStatus(state, text) {
+  const el = document.getElementById('ai-status');
+  if (!el) return;
+  el.classList.remove('online', 'thinking', 'offline');
+  if (state) el.classList.add(state);
+  document.getElementById('ai-status-text').textContent = text;
+}
+
+function setAiError(message, code) {
+  const resp = document.getElementById('ai-response');
+  if (!resp) return;
+  resp.classList.remove('empty');
+  resp.innerHTML = `<div class="ai-panel-error">
+    <strong>⚠ ${escapeHtml(message)}</strong>
+    ${code ? `<div style="margin-top:6px;">Vérifie qu'Ollama tourne : <code>${code}</code></div>` : ''}
+  </div>`;
+  document.getElementById('ai-stop-btn').style.display = 'none';
+  document.getElementById('ai-retry-btn').style.display = '';
+}
+
+async function askOllama(question) {
+  setAiStatus('thinking', 'connexion…');
+  const resp = document.getElementById('ai-response');
+  resp.textContent = '';
+  resp.classList.remove('empty');
+  document.getElementById('ai-stop-btn').style.display = '';
+  document.getElementById('ai-retry-btn').style.display = 'none';
+  document.getElementById('ai-meta').textContent = '';
+
+  // Vérifier qu'Ollama est joignable
+  const status = await checkOllamaStatus();
+  if (!status.online) {
+    setAiStatus('offline', 'Ollama hors-ligne');
+    setAiError(
+      "Impossible de joindre Ollama sur localhost:11434.",
+      'ollama serve  (et configure OLLAMA_ORIGINS=*)'
+    );
+    return;
+  }
+  // Vérifier que le modèle est dispo
+  if (!status.models.some(m => m.startsWith(OLLAMA.model))) {
+    setAiStatus('offline', 'Modèle absent');
+    setAiError(
+      `Le modèle "${OLLAMA.model}" n'est pas installé.`,
+      `ollama pull ${OLLAMA.model}`
+    );
+    return;
+  }
+
+  setAiStatus('thinking', 'génération…');
+
+  // Préparer le prompt
+  const ctx = buildContextForAI();
+  const fullPrompt = `Voici les données du portefeuille TDF (date du jour : ${ctx.today}).
+
+PORTEFEUILLE (${ctx.portfolioCount} produits) :
+${JSON.stringify(ctx.portfolio, null, 0)}
+
+CTs 2026 (${ctx.cts2026.length} événements) :
+${JSON.stringify(ctx.cts2026, null, 0)}
+
+Question de l'utilisateur : ${question}
+
+Réponds de façon factuelle et concise en français.`;
+
+  OLLAMA.ctrl = new AbortController();
+  const t0 = performance.now();
+  let totalTokens = 0;
+
+  try {
+    const r = await fetch(`${OLLAMA.baseUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: OLLAMA.model,
+        system: OLLAMA.systemPrompt,
+        prompt: fullPrompt,
+        stream: true,
+        options: { temperature: 0.2, num_predict: 1000 },
+      }),
+      signal: OLLAMA.ctrl.signal,
+    });
+    if (!r.ok) {
+      setAiStatus('offline', 'Erreur HTTP');
+      setAiError(`Ollama a répondu avec un statut ${r.status}.`, null);
+      return;
+    }
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const json = JSON.parse(line);
+          if (json.response) {
+            resp.textContent += json.response;
+            totalTokens++;
+          }
+          if (json.done) {
+            const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+            document.getElementById('ai-meta').textContent =
+              `${elapsed}s · ${totalTokens} tokens · modèle ${OLLAMA.model}`;
+            setAiStatus('online', 'terminé');
+            document.getElementById('ai-stop-btn').style.display = 'none';
+            document.getElementById('ai-retry-btn').style.display = '';
+          }
+        } catch {}
+      }
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      setAiStatus('offline', 'arrêté');
+      document.getElementById('ai-stop-btn').style.display = 'none';
+      document.getElementById('ai-retry-btn').style.display = '';
+      document.getElementById('ai-meta').textContent = 'Réponse interrompue';
+    } else {
+      setAiStatus('offline', 'erreur');
+      setAiError(`Erreur : ${e.message}`, null);
+    }
+  } finally {
+    OLLAMA.ctrl = null;
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+(function initSearch() {
+  const input = document.getElementById('searchbar');
+  const dropdown = document.getElementById('search-dropdown');
+  input.addEventListener('focus', () => renderSearchDropdown(input.value));
+  input.addEventListener('input', () => renderSearchDropdown(input.value));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearchSubmit(input.value);
+    } else if (e.key === 'Escape') {
+      dropdown.classList.remove('open');
+      input.blur();
+    }
+  });
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('open');
+    }
+  });
+})();
+
+// === Boot ===
+initFilters();
+render();
+</script>
+</body>
+</html>
